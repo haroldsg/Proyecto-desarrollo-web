@@ -1,48 +1,76 @@
-# backrooms
+# 🎮 Backrooms Multiplayer
 
-This template should help get you started developing with Vue 3 in Vite.
+Juego de exploración y puzzles multijugador en tiempo real inspirado en los Backrooms.
 
-## Recommended IDE Setup
+**Stack:** Vue.js 3 + Node.js + Express + MySQL + Socket.io
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+---
 
-## Recommended Browser Setup
+## 🚀 Instalación Rápida
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
+# Frontend
 npm install
-```
+npm run dev
 
-### Compile and Hot-Reload for Development
-
-```sh
+# Backend
+cd backend
+npm install
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+---
 
-```sh
-npm run build
+## 📋 Progreso del Proyecto
+
+
+### ✅ FASE 1: Backend + Base de Datos (Completada - 22/02/2026)
+
+**Cambios agregados:**
+- ✅ Backend inicializado con Node.js + Express
+- ✅ 8 dependencias instaladas (Express, MySQL2, JWT, Bcrypt, Socket.io, etc.)
+- ✅ Configuración de conexión a MySQL con pool
+- ✅ Script SQL completo para crear 8 tablas
+- ✅ Sistema de roles (user/admin) y moderación agregado
+- ✅ Servidor básico funcionando con health check
+- ✅ Diseño de base de datos completo (7 tablas) - `docs/DATABASE_DESIGN.md`
+- ✅ Estructura de carpetas backend/frontend - `docs/PROJECT_STRUCTURE.md`
+
+**Archivos creados:**
+```
+backend/
+├── package.json            # Dependencias del backend
+├── .env.example            # Template de variables de entorno
+├── README.md               # Guía del backend
+├── src/
+│   ├── server.js           # Servidor Express
+│   └── config/
+│       └── database.js     # Conexión MySQL
+└── database/
+    └── schema.sql          # Script para crear tablas
 ```
 
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
+**Cómo probar (Se explica mejor en backend\README_HOW_RUN_SERVER.md) :**
+```bash
+cd backend
+cp .env.example .env  # Configurar credenciales
+mysql -u root -p < database/schema.sql
+npm run dev
+curl http://localhost:3000/health
 ```
+
+---
+
+## 📚 Documentación
+
+Toda la documentación técnica está en la carpeta `docs/`:
+- **DATABASE_DESIGN.md** - Diseño de la base de datos
+
+---
+
+## 🛠️ Stack Tecnológico
+
+**Frontend:** Vue.js 3, Pinia, Vue Router, Tailwind CSS, TypeScript
+**Backend:** Node.js, Express, Socket.io
+**Database:** MySQL 8.0
+**Auth:** JWT + Bcrypt

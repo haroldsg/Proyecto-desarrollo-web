@@ -1,0 +1,30 @@
+{
+  "name": "backrooms-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Backrooms Multiplayer Game",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": ["backrooms", "multiplayer", "game", "api"],
+  "author": "Backrooms Team",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "mysql2": "^3.11.5",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1",
+    "socket.io": "^4.7.5",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "joi": "^17.13.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
