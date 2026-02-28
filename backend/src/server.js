@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { testConnection } from './config/database.js'
+import authRoutes from './routes/authRoutes.js'
 
 // Cargar variables de entorno
 dotenv.config()
@@ -10,10 +11,12 @@ const app = express()
 const PORT = process.env.PORT || 3000
 
 // Middlewares
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true,
-}))
+// En desarrollo permitimos cualquier origen para testing
+const corsOptions = process.env.NODE_ENV === 'production'
+  ? { origin: process.env.FRONTEND_URL, credentials: true }
+  : { origin: true, credentials: true }
+
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -35,6 +38,11 @@ app.get('/health', async (req, res) => {
     timestamp: new Date().toISOString(),
   })
 })
+
+// ========================================
+// RUTAS DE LA API
+// ========================================
+app.use('/api/auth', authRoutes)
 
 // Iniciar servidor
 app.listen(PORT, async () => {

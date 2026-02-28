@@ -91,30 +91,6 @@ Respuesta esperada:
 
 ---
 
-## 📂 Estructura del Backend
-
-```
-backend/
-├── src/
-│   ├── config/
-│   │   └── database.js       # Configuración de MySQL
-│   ├── controllers/          # Lógica de negocio (próximo)
-│   ├── routes/               # Endpoints de la API (próximo)
-│   ├── models/               # Modelos de datos (próximo)
-│   ├── middleware/           # Middlewares (próximo)
-│   ├── utils/                # Funciones auxiliares (próximo)
-│   └── server.js             # Punto de entrada
-│
-├── database/
-│   └── schema.sql            # Script para crear tablas
-│
-├── package.json
-├── .env.example
-└── README.md
-```
-
----
-
 ## 🗄️ Base de Datos
 
 ### Tablas creadas (8):
