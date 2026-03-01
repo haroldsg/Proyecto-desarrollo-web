@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backrooms API - Test Rooms</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #fff;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 10px; color: #00d9ff; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .card h3 {
+      color: #00d9ff;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; color: #aaa; font-size: 14px; }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-size: 14px;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: #00d9ff;
+    }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+    .btn-primary { background: #00d9ff; color: #000; }
+    .btn-primary:hover { background: #00b8d9; }
+    .btn-success { background: #00ff88; color: #000; }
+    .btn-success:hover { background: #00d970; }
+    .btn-danger { background: #ff4757; color: #fff; }
+    .btn-danger:hover { background: #ff3344; }
+    .btn-warning { background: #ffa502; color: #000; }
+    .btn-warning:hover { background: #e69500; }
+
+    .response {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .response.success { border-left: 3px solid #00ff88; }
+    .response.error { border-left: 3px solid #ff4757; }
+
+    .status-bar {
+      background: rgba(0,0,0,0.3);
+      padding: 15px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .status-item { display: flex; align-items: center; gap: 8px; }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ff4757;
+    }
+    .status-dot.connected { background: #00ff88; }
+
+    .token-display {
+      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      word-break: break-all;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .room-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .room-item {
+      background: rgba(0,0,0,0.3);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .room-info h4 { color: #00d9ff; margin-bottom: 5px; }
+    .room-info p { color: #888; font-size: 12px; }
+    .room-code {
+      background: #00d9ff;
+      color: #000;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    .chat-container {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 15px;
+    }
+    .chat-messages {
+      height: 150px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    .chat-message {
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .chat-message .username { color: #00d9ff; font-weight: bold; }
+    .chat-message .time { color: #666; font-size: 11px; }
+    .chat-input-group { display: flex; gap: 10px; }
+    .chat-input-group input { flex: 1; }
+
+    .section-title {
+      color: #00d9ff;
+      font-size: 18px;
+      margin: 30px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚪 Backrooms - Test Rooms API</h1>
+    <p class="subtitle">Panel de pruebas para el sistema de salas multijugador</p>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-dot" id="serverStatus"></span>
+        <span>Servidor: <span id="serverStatusText">Verificando...</span></span>
+      </div>
+      <div class="status-item">
+        <span class="status-dot" id="socketStatus"></span>
+        <span>Socket.io: <span id="socketStatusText">Desconectado</span></span>
+      </div>
+      <div class="status-item">
+        <span>Usuario: <strong id="currentUser">No autenticado</strong></span>
+      </div>
+      <div class="token-display" id="tokenDisplay">Sin token</div>
+    </div>
+
+    <!-- Auth Section -->
+    <h2 class="section-title">🔐 Autenticación (Paso 1)</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>📝 Registro Rápido</h3>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="regUsername" placeholder="testuser">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="test@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="password123">
+        </div>
+        <button class="btn-primary" onclick="register()">Registrar</button>
+        <div class="response" id="registerResponse"></div>
+      </div>
+
+      <div class="card">
+        <h3>🔑 Login</h3>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="test@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="password123">
+        </div>
+        <button class="btn-success" onclick="login()">Iniciar Sesión</button>
+        <div class="response" id="loginResponse"></div>
+      </div>
+    </div>
+
+    <!-- Rooms Section -->
+    <h2 class="section-title">🚪 Gestión de Salas (Paso 2)</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>➕ Crear Sala</h3>
+        <div class="form-group">
+          <label>Nombre de la sala</label>
+          <input type="text" id="roomName" placeholder="Mi sala de Backrooms">
+        </div>
+        <div class="form-group">
+          <label>Máximo de jugadores</label>
+          <select id="maxPlayers">
+            <option value="2">2 jugadores</option>
+            <option value="3">3 jugadores</option>
+            <option value="4" selected>4 jugadores</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="createRoom()">Crear Sala</button>
+        <div class="response" id="createRoomResponse"></div>
+      </div>
+
+      <div class="card">
+        <h3>🔗 Unirse por Código</h3>
+        <div class="form-group">
+          <label>Código de sala</label>
+          <input type="text" id="roomCode" placeholder="ABC123" maxlength="6" style="text-transform: uppercase;">
+        </div>
+        <button class="btn-success" onclick="joinByCode()">Unirse</button>
+        <div class="response" id="joinCodeResponse"></div>
+      </div>
+    </div>
+
+    <!-- Available Rooms -->
+    <h2 class="section-title">📋 Salas Disponibles</h2>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin: 0;">🎮 Lista de Salas</h3>
+        <button class="btn-primary" onclick="loadRooms()">🔄 Actualizar</button>
+      </div>
+      <div class="room-list" id="roomList">
+        <p style="color: #888; text-align: center;">Cargando salas...</p>
+      </div>
+    </div>
+
+    <!-- Current Room -->
+    <h2 class="section-title">🎯 Sala Actual</h2>
+    <div class="grid">
+      <div class="card">
+        <h3>📍 Mi Sala</h3>
+        <button class="btn-primary" onclick="getCurrentRoom()" style="margin-bottom: 15px;">Verificar Sala Actual</button>
+        <div id="currentRoomInfo">
+          <p style="color: #888;">No estás en ninguna sala</p>
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <button class="btn-warning" onclick="startGame()">🎮 Iniciar Juego</button>
+          <button class="btn-danger" onclick="leaveRoom()">🚪 Salir de Sala</button>
+        </div>
+        <div class="response" id="roomActionResponse"></div>
+      </div>
+
+      <div class="card">
+        <h3>💬 Chat de Sala</h3>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages">
+            <p style="color: #666; text-align: center;">Únete a una sala para chatear</p>
+          </div>
+          <div class="chat-input-group">
+            <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChat()">
+            <button class="btn-primary" onclick="sendChat()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:3000'
+    let token = localStorage.getItem('backrooms_token') || null
+    let socket = null
+    let currentRoomId = null
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+      checkServer()
+      if (token) {
+        updateTokenDisplay()
+        getMe()
+        connectSocket()
+      }
+      loadRooms()
+    })
+
+    // Verificar servidor
+    async function checkServer() {
+      try {
+        const res = await fetch(`${API_URL}/health`)
+        const data = await res.json()
+        document.getElementById('serverStatus').classList.add('connected')
+        document.getElementById('serverStatusText').textContent = 'Conectado'
+      } catch (e) {
+        document.getElementById('serverStatusText').textContent = 'Desconectado'
+      }
+    }
+
+    // Actualizar display del token
+    function updateTokenDisplay() {
+      const display = document.getElementById('tokenDisplay')
+      if (token) {
+        display.textContent = token.substring(0, 30) + '...'
+      } else {
+        display.textContent = 'Sin token'
+      }
+    }
+
+    // Conectar Socket.io
+    function connectSocket() {
+      if (!token) return
+
+      socket = io(API_URL, {
+        auth: { token }
+      })
+
+      socket.on('connect', () => {
+        document.getElementById('socketStatus').classList.add('connected')
+        document.getElementById('socketStatusText').textContent = 'Conectado'
+      })
+
+      socket.on('disconnect', () => {
+        document.getElementById('socketStatus').classList.remove('connected')
+        document.getElementById('socketStatusText').textContent = 'Desconectado'
+      })
+
+      socket.on('error', (data) => {
+        console.error('Socket error:', data)
+      })
+
+      // Eventos de sala
+      socket.on('room:playerJoined', (data) => {
+        addChatMessage('Sistema', `${data.username} se unió a la sala`, true)
+        getCurrentRoom()
+      })
+
+      socket.on('room:playerLeft', (data) => {
+        addChatMessage('Sistema', `${data.username} salió de la sala`, true)
+        getCurrentRoom()
+      })
+
+      socket.on('room:gameStarted', (data) => {
+        addChatMessage('Sistema', '¡El juego ha comenzado!', true)
+        getCurrentRoom()
+      })
+
+      socket.on('room:deleted', (data) => {
+        addChatMessage('Sistema', 'La sala ha sido eliminada', true)
+        currentRoomId = null
+        getCurrentRoom()
+      })
+
+      // Chat
+      socket.on('chat:message', (data) => {
+        addChatMessage(data.username, data.message)
+      })
+
+      socket.on('room:playerConnected', (data) => {
+        addChatMessage('Sistema', `${data.username} está conectado`, true)
+      })
+
+      socket.on('room:playerDisconnected', (data) => {
+        addChatMessage('Sistema', `${data.username} se desconectó`, true)
+      })
+    }
+
+    // Helper para requests
+    async function apiRequest(endpoint, method = 'GET', body = null) {
+      const options = {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+
+      if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`
+      }
+
+      if (body) {
+        options.body = JSON.stringify(body)
+      }
+
+      const res = await fetch(`${API_URL}${endpoint}`, options)
+      return res.json()
+    }
+
+    // Auth functions
+    async function register() {
+      const username = document.getElementById('regUsername').value
+      const email = document.getElementById('regEmail').value
+      const password = document.getElementById('regPassword').value
+
+      const responseEl = document.getElementById('registerResponse')
+      try {
+        const data = await apiRequest('/api/auth/register', 'POST', { username, email, password })
+        responseEl.className = 'response ' + (data.success ? 'success' : 'error')
+        responseEl.textContent = JSON.stringify(data, null, 2)
+
+        if (data.success && data.data.token) {
+          token = data.data.token
+          localStorage.setItem('backrooms_token', token)
+          updateTokenDisplay()
+          document.getElementById('currentUser').textContent = data.data.user.username
+          connectSocket()
+        }
+      } catch (e) {
+        responseEl.className = 'response error'
+        responseEl.textContent = 'Error: ' + e.message
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById('loginEmail').value
+      const password = document.getElementById('loginPassword').value
+
+      const responseEl = document.getElementById('loginResponse')
+      try {
+        const data = await apiRequest('/api/auth/login', 'POST', { email, password })
+        responseEl.className = 'response ' + (data.success ? 'success' : 'error')
+        responseEl.textContent = JSON.stringify(data, null, 2)
+
+        if (data.success && data.data.token) {
+          token = data.data.token
+          localStorage.setItem('backrooms_token', token)
+          updateTokenDisplay()
+          document.getElementById('currentUser').textContent = data.data.user.username
+          connectSocket()
+        }
+      } catch (e) {
+        responseEl.className = 'response error'
+        responseEl.textContent = 'Error: ' + e.message
+      }
+    }
+
+    async function getMe() {
+      try {
+        const data = await apiRequest('/api/auth/me')
+        if (data.success) {
+          document.getElementById('currentUser').textContent = data.data.user.username
+        }
+      } catch (e) {
+        console.error('Error getting user:', e)
+      }
+    }
+
+    // Room functions
+    async function createRoom() {
+      const roomName = document.getElementById('roomName').value || 'Sala de Backrooms'
+      const maxPlayers = parseInt(document.getElementById('maxPlayers').value)
+
+      const responseEl = document.getElementById('createRoomResponse')
+      try {
+        const data = await apiRequest('/api/rooms', 'POST', { roomName, maxPlayers })
+        responseEl.className = 'response ' + (data.success ? 'success' : 'error')
+        responseEl.textContent = JSON.stringify(data, null, 2)
+
+        if (data.success) {
+          currentRoomId = data.data.room.id
+          if (socket) socket.emit('room:join', currentRoomId)
+          loadRooms()
+          getCurrentRoom()
+        }
+      } catch (e) {
+        responseEl.className = 'response error'
+        responseEl.textContent = 'Error: ' + e.message
+      }
+    }
+
+    async function loadRooms() {
+      const listEl = document.getElementById('roomList')
+      try {
+        const data = await apiRequest('/api/rooms')
+        if (data.success && data.data.rooms.length > 0) {
+          listEl.innerHTML = data.data.rooms.map(room => `
+            <div class="room-item">
+              <div class="room-info">
+                <h4>${room.room_name}</h4>
+                <p>Host: ${room.host_username} | Jugadores: ${room.current_players}/${room.max_players}</p>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <span class="room-code">${room.room_code}</span>
+                <button class="btn-success" onclick="joinRoom(${room.id})">Unirse</button>
+              </div>
+            </div>
+          `).join('')
+        } else {
+          listEl.innerHTML = '<p style="color: #888; text-align: center;">No hay salas disponibles</p>'
+        }
+      } catch (e) {
+        listEl.innerHTML = '<p style="color: #ff4757; text-align: center;">Error al cargar salas</p>'
+      }
+    }
+
+    async function joinRoom(roomId) {
+      try {
+        const data = await apiRequest(`/api/rooms/${roomId}/join`, 'POST')
+        if (data.success) {
+          currentRoomId = roomId
+          if (socket) socket.emit('room:join', roomId)
+          loadRooms()
+          getCurrentRoom()
+          addChatMessage('Sistema', 'Te has unido a la sala', true)
+        } else {
+          alert(data.message)
+        }
+      } catch (e) {
+        alert('Error: ' + e.message)
+      }
+    }
+
+    async function joinByCode() {
+      const code = document.getElementById('roomCode').value.toUpperCase()
+      const responseEl = document.getElementById('joinCodeResponse')
+
+      try {
+        const data = await apiRequest('/api/rooms/join', 'POST', { code })
+        responseEl.className = 'response ' + (data.success ? 'success' : 'error')
+        responseEl.textContent = JSON.stringify(data, null, 2)
+
+        if (data.success) {
+          currentRoomId = data.data.room.id
+          if (socket) socket.emit('room:join', currentRoomId)
+          loadRooms()
+          getCurrentRoom()
+        }
+      } catch (e) {
+        responseEl.className = 'response error'
+        responseEl.textContent = 'Error: ' + e.message
+      }
+    }
+
+    async function getCurrentRoom() {
+      const infoEl = document.getElementById('currentRoomInfo')
+      try {
+        const data = await apiRequest('/api/rooms/current')
+        if (data.success && data.data.room) {
+          const room = data.data.room
+          currentRoomId = room.id
+          infoEl.innerHTML = `
+            <div style="background: rgba(0,217,255,0.1); padding: 15px; border-radius: 8px;">
+              <h4 style="color: #00d9ff; margin-bottom: 10px;">${room.room_name}</h4>
+              <p><strong>Código:</strong> <span class="room-code">${room.room_code}</span></p>
+              <p><strong>Estado:</strong> ${room.status}</p>
+              <p><strong>Jugadores:</strong> ${room.currentPlayers}/${room.max_players}</p>
+              <p><strong>Eres host:</strong> ${room.is_host ? 'Sí' : 'No'}</p>
+              <div style="margin-top: 10px;">
+                <strong>Jugadores:</strong>
+                <ul style="margin-top: 5px; padding-left: 20px;">
+                  ${room.players.map(p => `<li>${p.username} ${p.is_host ? '(Host)' : ''}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+          `
+          // Unirse al socket de la sala si no estamos
+          if (socket && socket.connected) {
+            socket.emit('room:join', currentRoomId)
+          }
+        } else {
+          currentRoomId = null
+          infoEl.innerHTML = '<p style="color: #888;">No estás en ninguna sala</p>'
+        }
+      } catch (e) {
+        infoEl.innerHTML = '<p style="color: #ff4757;">Error al obtener sala</p>'
+      }
+    }
+
+    async function leaveRoom() {
+      if (!currentRoomId) {
+        alert('No estás en ninguna sala')
+        return
+      }
+
+      const responseEl = document.getElementById('roomActionResponse')
+      try {
+        const data = await apiRequest(`/api/rooms/${currentRoomId}/leave`, 'POST')
+        responseEl.className = 'response ' + (data.success ? 'success' : 'error')
+        responseEl.textContent = JSON.stringify(data, null, 2)
+
+        if (data.success) {
+          if (socket) socket.emit('room:leave', currentRoomId)
+          currentRoomId = null
+          loadRooms()
+          getCurrentRoom()
+          document.getElementById('chatMessages').innerHTML = '<p style="color: #666; text-align: center;">Únete a una sala para chatear</p>'
+        }
+      } catch (e) {
+        responseEl.className = 'response error'
+        responseEl.textContent = 'Error: ' + e.message
+      }
+    }
+
+    async function startGame() {
+      if (!currentRoomId) {
+        alert('No estás en ninguna sala')
+        return
+      }
+
+      const responseEl = document.getElementById('roomActionResponse')
+      try {
+        const data = await apiRequest(`/api/rooms/${currentRoomId}/start`, 'POST')
+        responseEl.className = 'response ' + (data.success ? 'success' : 'error')
+        responseEl.textContent = JSON.stringify(data, null, 2)
+
+        if (data.success) {
+          getCurrentRoom()
+        }
+      } catch (e) {
+        responseEl.className = 'response error'
+        responseEl.textContent = 'Error: ' + e.message
+      }
+    }
+
+    // Chat functions
+    function sendChat() {
+      const input = document.getElementById('chatInput')
+      const message = input.value.trim()
+
+      if (!message || !currentRoomId || !socket) return
+
+      socket.emit('chat:message', { roomId: currentRoomId, message })
+      input.value = ''
+    }
+
+    function addChatMessage(username, message, isSystem = false) {
+      const messagesEl = document.getElementById('chatMessages')
+      const time = new Date().toLocaleTimeString()
+
+      // Limpiar mensaje inicial si existe
+      if (messagesEl.querySelector('p[style]')) {
+        messagesEl.innerHTML = ''
+      }
+
+      const msgEl = document.createElement('div')
+      msgEl.className = 'chat-message'
+      msgEl.innerHTML = isSystem
+        ? `<span style="color: #ffa502;">[${time}] ${message}</span>`
+        : `<span class="username">${username}:</span> ${message} <span class="time">${time}</span>`
+
+      messagesEl.appendChild(msgEl)
+      messagesEl.scrollTop = messagesEl.scrollHeight
+    }
+  </script>
+</body>
+</html>

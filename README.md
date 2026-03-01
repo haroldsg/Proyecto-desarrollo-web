@@ -119,6 +119,70 @@ Ver guía completa en [TESTING_API.md](docs/TESTING_API.md)
 
 ---
 
+### ✅ FASE 3: Sistema de Salas/Lobby Multijugador
+
+**Cambios agregados:**
+- ✅ Modelo Room.js con operaciones CRUD completas
+- ✅ Controlador de salas con 8 endpoints
+- ✅ Rutas protegidas con autenticación JWT
+- ✅ Socket.io configurado para tiempo real
+- ✅ Chat en sala funcionando
+- ✅ Sistema de host con transferencia automática
+- ✅ Soporte para 2-4 jugadores por sala
+- ✅ Se agrearon nuevos campos en la base de datos
+
+**Archivos creados:**
+```
+backend/
+├── test-rooms.html              # Panel visual para probar salas
+├── src/
+│   ├── controllers/
+│   │   └── roomController.js    # Controlador de salas
+│   ├── models/
+│   │   └── Room.js              # Modelo de sala
+│   ├── routes/
+│   │   └── roomRoutes.js        # Rutas de salas
+│   └── socket/
+│       └── socketHandler.js     # Eventos Socket.io
+```
+
+**Endpoints disponibles:**
+```bash
+POST /api/rooms           # Crear sala
+GET  /api/rooms           # Listar salas disponibles
+GET  /api/rooms/current   # Obtener sala actual del usuario
+GET  /api/rooms/:id       # Detalles de una sala
+POST /api/rooms/:id/join  # Unirse por ID
+POST /api/rooms/join      # Unirse por código
+POST /api/rooms/:id/leave # Salir de sala
+POST /api/rooms/:id/start # Iniciar juego (solo host)
+```
+
+**Eventos Socket.io:**
+```javascript
+// Cliente -> Servidor
+'room:join'      // Unirse al socket de una sala
+'room:leave'     // Salir del socket de una sala
+'chat:message'   // Enviar mensaje de chat
+
+// Servidor -> Cliente
+'room:playerJoined'      // Un jugador se unió
+'room:playerLeft'        // Un jugador salió
+'room:gameStarted'       // El juego comenzó
+'room:deleted'           // La sala fue eliminada
+'chat:message'           // Mensaje de chat recibido
+```
+
+**Cómo probar:**
+1. Importa la base de datos con nuevas tablas
+2. Inicia el servidor: `cd backend && npm run dev`
+3. Abre `backend/test-rooms.html` en el navegador
+4. Regístrate o inicia sesión
+5. Crea una sala o únete a una existente
+6. Abre otra pestaña para probar multijugador
+
+---
+
 ## 🧪 Probar los Endpoints
 
 ### **Panel de Pruebas Visual** (Recomendado)

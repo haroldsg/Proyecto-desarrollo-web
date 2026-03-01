@@ -36,13 +36,18 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS game_sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   room_code VARCHAR(10) NOT NULL UNIQUE,
+  room_name VARCHAR(100) NOT NULL DEFAULT 'Sala sin nombre',
+  host_id INT NOT NULL,
+  min_players INT NOT NULL DEFAULT 2,
   max_players INT NOT NULL DEFAULT 4,
   current_level INT DEFAULT 1,
   status ENUM('waiting', 'playing', 'finished') DEFAULT 'waiting' NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+  FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_room_code (room_code),
-  INDEX idx_status (status)
+  INDEX idx_status (status),
+  INDEX idx_host (host_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========================================
