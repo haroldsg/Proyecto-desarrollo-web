@@ -224,7 +224,14 @@ Ver guía completa en [docs/TESTING_API.md]
   - Creado `frontend/src/services/api.js` (cliente Axios con interceptores JWT)
   - Creado `frontend/src/services/socket.js` (cliente Socket.io)
   - Creado `frontend/.env` (configuración de URL del backend)
-- ⏳ Siguiente: Store Pinia para autenticación...
+- ✅ Commit 3: Store Pinia para gestión de estado global
+  - Creado `frontend/src/stores/auth.js` (state: user, token, loading, error)
+  - Getters: isAuthenticated, username, userId
+  - Actions: register(), login(), logout(), getMe(), init()
+  - Persistencia con localStorage
+  - Auto-conexión de Socket.io al login
+  - Modificado `main.ts` para inicializar el store
+- ⏳ Siguiente: Router con guards de autenticación...
 
 ---
 
