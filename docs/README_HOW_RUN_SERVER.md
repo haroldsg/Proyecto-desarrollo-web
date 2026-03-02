@@ -43,7 +43,7 @@ Ejecutar el script SQL en MySQL:
 
 **Opción 2: Desde terminal (Hacerlo directamente en el cmd, no powershell)**
 ```bash
-mysql -u root -p < database/schema.sql
+sudo mysql -u root -p < database/schema.sql
 ```
 **Opción 3:Importenlo directamente en la pagina admin**
 
