@@ -231,7 +231,12 @@ Ver guía completa en [docs/TESTING_API.md]
   - Persistencia con localStorage
   - Auto-conexión de Socket.io al login
   - Modificado `main.ts` para inicializar el store
-- ⏳ Siguiente: Router con guards de autenticación...
+- ✅ Commit 4: Router con Navigation Guards (protección de rutas)
+  - Rutas configuradas: `/`, `/login`, `/register`, `/lobby`, `/room/:id`, `/game`
+  - Navigation Guard `beforeEach` para proteger rutas privadas
+  - Meta fields: `requiresAuth` (rutas protegidas), `requiresGuest` (login/register)
+  - Redirección automática según estado de autenticación
+- ⏳ Siguiente: Crear vistas de autenticación (Login y Register)...
 
 ---
 
