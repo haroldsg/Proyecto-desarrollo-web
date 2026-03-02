@@ -9,19 +9,31 @@ Juego de exploración y puzzles multijugador en tiempo real inspirado en los Bac
 ## 🚀 Instalación Rápida
 
 ```bash
-# Frontend
-npm install
-npm run dev
-
 # Backend
 cd backend
 npm install
 npm run dev
+
+# Frontend (en otra terminal)
+cd frontend
+npm install
+npm run dev
 ```
+
+Luego abre http://localhost:5173
 
 ---
 
 ## 📋 Progreso del Proyecto
+
+### 🔄 FASE 4: Frontend Vue.js (EN DESARROLLO)
+
+**Progreso actual:**
+- ✅ Commit 1: Reestructuración del proyecto (backend/ y frontend/ separados)
+- ✅ Commit 2: Instalación de dependencias (axios, socket.io-client)
+- ⏳ Commit 3: Configuración de servicios pendiente...
+
+---
 
 
 ### ✅ FASE 1: Backend + Base de Datos
@@ -182,10 +194,7 @@ POST /api/rooms/:id/start # Iniciar juego (solo host)
 6. Abre otra pestaña para probar multijugador
 
 ---
-
-## 🧪 Probar los Endpoints
-
-### **Panel de Pruebas Visual** (Recomendado)
+## **Panel de Pruebas Visual** (Recomendado)
 
 Incluye un panel de pruebas interactivo para testear la API sin escribir código:
 
