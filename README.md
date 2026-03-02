@@ -26,15 +26,6 @@ Luego abre http://localhost:5173
 
 ## 📋 Progreso del Proyecto
 
-### 🔄 FASE 4: Frontend Vue.js (EN DESARROLLO)
-
-**Progreso actual:**
-- ✅ Commit 1: Reestructuración del proyecto (backend/ y frontend/ separados)
-- ✅ Commit 2: Instalación de dependencias (axios, socket.io-client)
-- ⏳ Commit 3: Configuración de servicios pendiente...
-
----
-
 
 ### ✅ FASE 1: Backend + Base de Datos
 
@@ -222,6 +213,21 @@ Incluye un panel de pruebas interactivo para testear la API sin escribir código
 - Postman
 
 Ver guía completa en [docs/TESTING_API.md]
+
+---
+
+### 🔄 FASE 4: Frontend Vue.js (EN DESARROLLO)
+
+**Progreso actual:**
+- ✅ Commit 1: Reestructuración del proyecto (backend/ y frontend/ separados) e Instalación de dependencias (axios, socket.io-client)
+- ✅ Commit 2: Configuración de servicios API y Socket.io
+  - Creado `frontend/src/services/api.js` (cliente Axios con interceptores JWT)
+  - Creado `frontend/src/services/socket.js` (cliente Socket.io)
+  - Creado `frontend/.env` (configuración de URL del backend)
+- ⏳ Siguiente: Store Pinia para autenticación...
+
+---
+
 
 ---
 
