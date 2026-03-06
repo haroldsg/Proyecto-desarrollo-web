@@ -27,6 +27,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/game-mode',
+      name: 'game-mode',
+      component: () => import('../views/GameModeView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/room/:id',
       name: 'room',
       component: () => import('../views/RoomView.vue'),
@@ -36,6 +42,12 @@ const router = createRouter({
       path: '/game',
       name: 'game',
       component: () => import('../views/GameView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: () => import('../views/ChatGlobalView.vue'),
       meta: { requiresAuth: true }
     }
   ]

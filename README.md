@@ -236,10 +236,34 @@ Ver guía completa en [docs/TESTING_API.md]
   - Navigation Guard `beforeEach` para proteger rutas privadas
   - Meta fields: `requiresAuth` (rutas protegidas), `requiresGuest` (login/register)
   - Redirección automática según estado de autenticación
-- ⏳ Siguiente: Crear vistas de autenticación (Login y Register)...
+- ✅ Commit 5: Migración completa a Tailwind CSS + Vistas del juego
 
----
+  **Instalación y configuración de Tailwind CSS:**
+  - Instalado Tailwind CSS 3.4.1, PostCSS 8.4.35, Autoprefixer 10.4.17
+  - Creado `tailwind.config.js` con tema personalizado Backrooms:
+    - Colores custom: `backrooms-yellow (#ffdc64)`, `backrooms-yellow-dark (#d4a437)`, `backrooms-dark (#141414)`, `backrooms-dark-light (#1a1a1a)`
+    - Safelist configurada con regex patterns para clases dinámicas con opacidad (`bg-backrooms-yellow/20`, etc.)
+    - Animación custom `flicker` para efectos Backrooms
+  - Creado `postcss.config.js` para procesamiento CSS
+  - Actualizado `main.css` con directivas Tailwind (@tailwind base/components/utilities)
 
+  **Migración de componentes/vistas a Tailwind (8 archivos):**
+  - ✅ `NavBar.vue` - Navegación con pestañas + dropdown de perfil funcional
+  - ✅ `LoginView.vue` - Formulario de login con validación
+  - ✅ `RegisterView.vue` - Formulario de registro con confirmación de contraseña
+  - ✅ `LobbyView.vue` - Lista de salas disponibles + modal crear sala + auto-refresh (5s)
+  - ✅ `RoomView.vue` - Sala de espera con chat, lista de jugadores, host controls
+  - ✅ `GameView.vue` - Interfaz de juego rediseñada (ver abajo)
+  - ✅ `GameModeView.vue` - Selector de modo de juego (Solo/Multijugador)
+  - ✅ `ChatGlobalView.vue` - Chat global con Socket.io
+
+  **Características generales:**
+  - 🎨 Diseño 100% responsive (móvil, tablet, desktop) con breakpoints Tailwind
+  - 🌙 Tema oscuro Backrooms consistente en todas las vistas
+  - ✨ Animaciones de hover y transiciones suaves
+  - 🔐 Integración con authStore y roomAPI
+
+**FASE 4 FRONTEND COMPLETADA -**
 
 ---
 

@@ -6,11 +6,11 @@ export const createRoom = async (req, res) => {
     const { roomName, maxPlayers = 4 } = req.body
     const hostId = req.user.id
 
-    // Validar maxPlayers (2-4)
-    if (maxPlayers < 2 || maxPlayers > 4) {
+    // Validar maxPlayers (1-4, permitir juego solo)
+    if (maxPlayers < 1 || maxPlayers > 4) {
       return res.status(400).json({
         success: false,
-        message: 'El número de jugadores debe ser entre 2 y 4'
+        message: 'El número de jugadores debe ser entre 1 y 4'
       })
     }
 
