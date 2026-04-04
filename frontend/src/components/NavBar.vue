@@ -4,7 +4,6 @@
     <div class="flex items-center gap-8">
       <!-- Logo -->
       <div class="flex items-center gap-2.5 font-mono">
-        <span class="text-3xl">🚪</span>
         <span class="text-xl font-bold text-backrooms-yellow tracking-[3px] drop-shadow-[0_0_10px_rgba(255,220,100,0.3)] md:inline hidden">
           BACKROOMS
         </span>
@@ -78,7 +77,7 @@
       <transition name="dropdown">
         <div
           v-if="showDropdown"
-          class="absolute top-[calc(100%+10px)] right-0 min-w-[220px] bg-backrooms-dark/98 border-2 border-backrooms-yellow/30 rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.6)] overflow-hidden z-[100]"
+          class="bg-backrooms-dark-light/100 absolute top-[calc(100%+10px)] right-0 min-w-[220px] bg-backrooms-dark/98 border-2 border-backrooms-yellow/30 rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.6)] overflow-hidden z-[100]"
         >
           <div class="px-5 py-3 flex flex-col gap-1">
             <div class="text-xs text-gray-400 uppercase">Usuario</div>

@@ -1,89 +1,58 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-[#1a1a1a] via-[#2d2416] to-[#1a1a1a] relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_2px)] before:pointer-events-none before:animate-[flicker_0.15s_infinite]">
+  <div class="min-h-screen relative overflow-hidden">
+    <!-- Backgrounds rotativos -->
+    <div
+      v-for="(bg, index) in backgrounds"
+      :key="index"
+      class="absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms]"
+      :style="{
+        backgroundImage: `url(${bg})`,
+        opacity: currentBgIndex === index ? 1 : 0,
+        zIndex: 0
+      }"
+    ></div>
+
+    <!-- Overlay oscuro -->
+    <div class="absolute inset-0 bg-black/60 z-[0]"></div>
+
+    <!-- Efecto de parpadeo -->
+    <div class="absolute inset-0 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.03)_0px,rgba(255,255,255,0.03)_1px,transparent_1px,transparent_2px)] pointer-events-none animate-[flicker_0.15s_infinite] z-[0]"></div>
+
     <NavBar />
 
-    <div class="max-w-[1200px] mx-auto px-5 py-[60px] relative z-[1]">
-      <div class="text-center mb-[60px]">
-        <h1 class="text-6xl md:text-7xl text-backrooms-yellow mb-4 shadow-[0_0_40px_rgba(255,220,100,0.5)] font-['Courier_New',monospace] tracking-[8px]">
-          🎮 Backrooms
+    <div class="mx-auto px-5 py-[60px] relative z-[1]">
+      <div class="text-center mb-[100px]">
+        <h1 class="text-6xl md:text-7xl text-backrooms-yellow mb-4 font-['Courier_New',monospace] tracking-[8px]">
+          Backrooms
         </h1>
-        <p class="text-xl md:text-2xl text-[#ccc] font-light">
-          Elige cómo quieres jugar
-        </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-[60px]">
+      <div class="max-w-md mx-auto space-y-5 mb-[60px]">
         <!-- Jugar Solo -->
         <div
           @click="handleSoloPlay"
-          class="bg-backrooms-dark-light/80 border-2 border-backrooms-yellow/30 rounded-2xl p-10 cursor-pointer transition-all duration-[400ms] ease-in-out relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-br before:from-backrooms-yellow/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-[400ms] hover:before:opacity-100 hover:-translate-y-2.5 hover:scale-[1.02] hover:border-blue-400/60 hover:shadow-[0_20px_60px_rgba(100,150,255,0.2)]"
+          class="bg-backrooms-dark-light/80 rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-backrooms-dark-light hover:border-backrooms-yellow/60 hover:shadow-[0_8px_30px_rgba(255,220,100,0.2)] hover:-translate-y-1"
         >
-          <div class="text-[5rem] mb-5 text-center drop-shadow-[0_0_20px_rgba(255,220,100,0.4)]">
-            🚶
-          </div>
-          <h2 class="text-backrooms-yellow text-3xl mb-4 text-center font-['Courier_New',monospace]">
+          <h2 class="text-backrooms-yellow text-3xl text-center font-['Courier_New',monospace] tracking-wide">
             Jugar Solo
           </h2>
-          <p class="text-[#ccc] text-base leading-relaxed mb-6 text-center">
-            Explora los Backrooms por tu cuenta. Enfréntate a los desafíos en solitario.
-          </p>
-          <ul class="list-none p-0 m-0 mb-8">
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Partida individual
-            </li>
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Progreso personal
-            </li>
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Dificultad ajustada
-            </li>
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Inicio inmediato
-            </li>
-          </ul>
-          <button class="w-full py-4 bg-gradient-to-br from-[#6f9fff] to-[#4477dd] border-none rounded-lg text-white text-xl font-bold cursor-pointer transition-all duration-300 uppercase tracking-[2px] hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(100,150,255,0.5)]">
-            Comenzar Solo
-          </button>
         </div>
 
-        <!-- Crear Partida Multijugador -->
+        <!-- Crear Sala -->
         <div
           @click="handleMultiplayerCreate"
-          class="bg-backrooms-dark-light/80 border-2 border-backrooms-yellow/30 rounded-2xl p-10 cursor-pointer transition-all duration-[400ms] ease-in-out relative overflow-hidden before:content-[''] before:absolute before:top-0 before:left-0 before:w-full before:h-full before:bg-gradient-to-br before:from-backrooms-yellow/5 before:to-transparent before:opacity-0 before:transition-opacity before:duration-[400ms] hover:before:opacity-100 hover:-translate-y-2.5 hover:scale-[1.02] hover:border-[#ff6496]/60 hover:shadow-[0_20px_60px_rgba(255,100,150,0.2)]"
+          class="bg-backrooms-dark-light/80  rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-backrooms-dark-light hover:border-backrooms-yellow/60 hover:shadow-[0_8px_30px_rgba(255,220,100,0.2)] hover:-translate-y-1"
         >
-          <div class="text-[5rem] mb-5 text-center drop-shadow-[0_0_20px_rgba(255,220,100,0.4)]">
-            👥
-          </div>
-          <h2 class="text-backrooms-yellow text-3xl mb-4 text-center font-['Courier_New',monospace]">
-            Crear Partida
-          </h2>
-          <p class="text-[#ccc] text-base leading-relaxed mb-6 text-center">
-            Crea una sala y juega con amigos. Trabajen juntos para sobrevivir.
-          </p>
-          <ul class="list-none p-0 m-0 mb-8">
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Multijugador cooperativo
-            </li>
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Hasta 4 jugadores
-            </li>
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Chat en tiempo real
-            </li>
-            <li class="text-[#999] text-[0.95rem] py-2 border-b border-backrooms-yellow/10 last:border-b-0">
-              ✓ Eres el host
-            </li>
-          </ul>
-          <button class="w-full py-4 bg-gradient-to-br from-[#ff6f9f] to-[#dd4477] border-none rounded-lg text-white text-xl font-bold cursor-pointer transition-all duration-300 uppercase tracking-[2px] hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(255,100,150,0.5)]">
+          <h2 class="text-backrooms-yellow text-3xl text-center font-['Courier_New',monospace] tracking-wide">
             Crear Sala
-          </button>
+          </h2>
         </div>
       </div>
 
       <div class="text-center">
         <button
           @click="router.push('/lobby')"
-          class="px-8 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-lg text-backrooms-yellow text-base font-semibold cursor-pointer transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow/50 hover:-translate-y-0.5"
+          class="px-8 py-3 bg-backrooms-yellow/10 rounded-lg text-backrooms-yellow text-base font-semibold cursor-pointer transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow/50 hover:-translate-y-0.5"
         >
           ← Volver al Lobby
         </button>
@@ -93,6 +62,7 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { roomAPI } from '@/services/api'
@@ -100,6 +70,28 @@ import NavBar from '@/components/NavBar.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// Backgrounds rotativos
+const backgrounds = [
+  '/images/background/background-1.jpg',
+  '/images/background/background-2.jpg',
+  '/images/background/background-3.jpg'
+]
+const currentBgIndex = ref(0)
+let bgInterval = null
+
+onMounted(() => {
+  // Cambiar background cada 7 segundos
+  bgInterval = setInterval(() => {
+    currentBgIndex.value = (currentBgIndex.value + 1) % backgrounds.length
+  }, 7000)
+})
+
+onUnmounted(() => {
+  if (bgInterval) {
+    clearInterval(bgInterval)
+  }
+})
 
 async function handleSoloPlay() {
   try {

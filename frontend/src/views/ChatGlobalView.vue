@@ -6,7 +6,7 @@
       <!-- Header -->
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 p-5 bg-backrooms-dark-light/60 border-2 border-backrooms-yellow/20 rounded-xl gap-2.5">
         <h1 class="text-3xl text-backrooms-yellow shadow-[0_0_20px_rgba(255,220,100,0.3)]">
-          💬 Chat Global
+          Chat Global
         </h1>
         <div class="flex items-center gap-2 text-[#6f6] font-semibold text-base">
           <span class="w-2.5 h-2.5 bg-[#6f6] rounded-full animate-[pulse_2s_infinite]"></span>

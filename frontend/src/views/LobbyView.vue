@@ -5,7 +5,7 @@
     <div class="max-w-7xl mx-auto px-5 py-10">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 mb-8">
         <h1 class="text-4xl md:text-5xl text-backrooms-yellow font-mono" style="text-shadow: 0 0 20px rgba(255, 220, 100, 0.3);">
-          🚪 Salas Disponibles
+          Salas Disponibles
         </h1>
         <button
           @click="showCreateModal = true"
