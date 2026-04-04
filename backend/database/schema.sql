@@ -41,13 +41,15 @@ CREATE TABLE IF NOT EXISTS game_sessions (
   min_players INT NOT NULL DEFAULT 2,
   max_players INT NOT NULL DEFAULT 4,
   current_level INT DEFAULT 1,
+  is_public BOOLEAN DEFAULT TRUE,
   status ENUM('waiting', 'playing', 'finished') DEFAULT 'waiting' NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
   FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_room_code (room_code),
   INDEX idx_status (status),
-  INDEX idx_host (host_id)
+  INDEX idx_host (host_id),
+  INDEX idx_is_public (is_public)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========================================

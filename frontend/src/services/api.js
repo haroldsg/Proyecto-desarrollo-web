@@ -55,8 +55,8 @@ export const authAPI = {
 // ROOM ENDPOINTS
 // ========================================
 export const roomAPI = {
-  createRoom: (roomName, maxPlayers) =>
-    api.post('/api/rooms', { roomName, maxPlayers }),
+  createRoom: (roomName, maxPlayers, isPublic = true) =>
+    api.post('/api/rooms', { roomName, maxPlayers, isPublic }),
 
   getAvailableRooms: () =>
     api.get('/api/rooms'),

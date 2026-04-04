@@ -36,8 +36,10 @@ const setupSocketHandlers = (io) => {
     /**
      * Unirse a una sala de juego (para recibir eventos)
      */
-    socket.on('room:join', async (roomId) => {
+    socket.on('room:join', async (data) => {
       try {
+        const roomId = typeof data === 'object' ? data.roomId : data
+
         const room = await Room.getRoomById(roomId)
         if (!room) {
           socket.emit('error', { message: 'Sala no encontrada' })
@@ -68,7 +70,9 @@ const setupSocketHandlers = (io) => {
     /**
      * Salir de una sala de socket
      */
-    socket.on('room:leave', (roomId) => {
+    socket.on('room:leave', (data) => {
+      const roomId = typeof data === 'object' ? data.roomId : data
+
       socket.leave(`room:${roomId}`)
       console.log(`${socket.user.username} dejó el socket de sala ${roomId}`)
 

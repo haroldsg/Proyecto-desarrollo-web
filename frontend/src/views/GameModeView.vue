@@ -61,9 +61,20 @@
             Crear Sala
           </h2>
         </div>
+
+        <!-- Salir de la Sala/Partida (si hay partida activa) -->
+        <div
+          v-if="activeRoom"
+          @click="handleLeaveGame"
+          class="bg-red-600/20 rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-red-600/30 hover:border-red-500/70 hover:shadow-[0_8px_30px_rgba(255,70,70,0.3)] hover:-translate-y-1"
+        >
+          <h2 class="text-red-400 text-3xl text-center font-['Courier_New',monospace] tracking-wide">
+            Salir de la Partida
+          </h2>
+        </div>
       </div>
 
-      <!-- Modal de Advertencia -->
+      <!-- Modal de Advertencia para Nueva Partida -->
       <div
         v-if="showWarning"
         class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5"
@@ -96,14 +107,39 @@
         </div>
       </div>
 
-      <div class="text-center">
-        <button
-          @click="router.push('/lobby')"
-          class="px-8 py-3 bg-backrooms-yellow/10 rounded-lg text-backrooms-yellow text-base font-semibold cursor-pointer transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow/50 hover:-translate-y-0.5"
-        >
-          ← Volver al Lobby
-        </button>
+      <!-- Modal de Advertencia para Salir -->
+      <div
+        v-if="showLeaveWarning"
+        class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5"
+        @click.self="showLeaveWarning = false"
+      >
+        <div class="bg-backrooms-dark border-2 border-red-500/50 rounded-lg p-8 max-w-md w-full">
+          <h3 class="text-red-400 text-2xl font-['Courier_New',monospace] mb-4 text-center">
+            ⚠️ SALIR DE LA PARTIDA
+          </h3>
+          <p class="text-white/90 text-center mb-6">
+            ¿Estás seguro de que quieres salir? <span class="text-red-400 font-bold">Perderás todo el progreso</span> de esta partida.
+          </p>
+          <p class="text-backrooms-yellow/70 text-sm text-center mb-6">
+            {{ activeRoom?.room_name }}
+          </p>
+          <div class="flex gap-4">
+            <button
+              @click="showLeaveWarning = false"
+              class="flex-1 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-lg text-backrooms-yellow font-semibold transition-all duration-300 hover:bg-backrooms-yellow/20"
+            >
+              Cancelar
+            </button>
+            <button
+              @click="confirmLeaveGame"
+              class="flex-1 py-3 bg-gradient-to-br from-red-600 to-red-800 border-none rounded-lg text-white font-bold transition-all duration-300 hover:from-red-700 hover:to-red-900"
+            >
+              Salir de la Partida
+            </button>
+          </div>
+        </div>
       </div>
+
     </div>
   </div>
 </template>
@@ -130,6 +166,7 @@ let bgInterval = null
 // Estado de partida activa
 const activeRoom = ref(null)
 const showWarning = ref(false)
+const showLeaveWarning = ref(false)
 const pendingAction = ref(null) // 'solo' o 'multiplayer'
 
 onMounted(async () => {
@@ -202,15 +239,13 @@ async function createSoloGame() {
 
 // Manejar creación de sala multijugador
 function handleMultiplayerCreate() {
-  // Si hay partida activa, mostrar advertencia
-  if (activeRoom.value) {
-    pendingAction.value = 'multiplayer'
-    showWarning.value = true
-    return
-  }
-
-  // Si no hay partida activa, ir al lobby
+  // Ir directamente al lobby (sin warning)
   router.push('/lobby')
+}
+
+// Manejar salir de la partida
+function handleLeaveGame() {
+  showLeaveWarning.value = true
 }
 
 // Confirmar abandono de partida y crear nueva
@@ -239,6 +274,29 @@ async function confirmNewGame() {
   } catch (err) {
     alert(err.message || 'Error al abandonar la partida')
     showWarning.value = false
+  }
+}
+
+// Confirmar salir de la partida
+async function confirmLeaveGame() {
+  try {
+    if (activeRoom.value) {
+      await roomAPI.leaveRoom(activeRoom.value.id)
+      localStorage.removeItem('currentRoomId')
+      localStorage.removeItem('isSoloGame')
+    }
+
+    // Cerrar modal
+    showLeaveWarning.value = false
+
+    // Limpiar estado
+    activeRoom.value = null
+
+    // Recargar para refrescar la vista
+    await checkActiveRoom()
+  } catch (err) {
+    alert(err.message || 'Error al salir de la partida')
+    showLeaveWarning.value = false
   }
 }
 </script>

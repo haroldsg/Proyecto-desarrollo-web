@@ -63,7 +63,7 @@ router.beforeEach((to, from, next) => {
   }
   // Rutas solo para invitados (login/register)
   else if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    next('/lobby')
+    next('/game-mode')
   }
   else {
     next()

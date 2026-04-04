@@ -12,21 +12,22 @@
       <!-- Navigation Tabs -->
       <div class="flex gap-1.5">
         <router-link
-          to="/lobby"
-          class="nav-tab group"
-          active-class="nav-tab-active"
-        >
-          <span class="text-xl">🏠</span>
-          <span class="hidden sm:inline font-semibold">Lobby</span>
-        </router-link>
-
-        <router-link
           to="/game-mode"
           class="nav-tab group"
           active-class="nav-tab-active"
         >
           <span class="text-xl">🎮</span>
           <span class="hidden sm:inline font-semibold">Jugar</span>
+        </router-link>
+
+
+        <router-link
+          to="/lobby"
+          class="nav-tab group"
+          active-class="nav-tab-active"
+        >
+          <span class="text-xl">🏠</span>
+          <span class="hidden sm:inline font-semibold">Lobby</span>
         </router-link>
 
         <router-link

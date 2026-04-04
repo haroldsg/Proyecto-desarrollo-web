@@ -5,22 +5,14 @@
     <div class="max-w-7xl mx-auto px-5 py-10">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 mb-8">
         <h1 class="text-4xl md:text-5xl text-backrooms-yellow font-mono" style="text-shadow: 0 0 20px rgba(255, 220, 100, 0.3);">
-          Salas Públicas
+          Salas Disponibles
         </h1>
-        <div class="flex gap-3">
-          <button
-            @click="showJoinCodeModal = true"
-            class="flex items-center gap-2 px-6 py-3 bg-blue-600/20 border-2 border-blue-400/40 rounded-lg text-blue-300 text-base font-bold cursor-pointer transition-all duration-300 hover:bg-blue-600/30 hover:border-blue-400/60 hover:-translate-y-0.5"
-          >
-            <span>🔑</span> Unirse con Código
-          </button>
-          <button
-            @click="showCreateModal = true"
-            class="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-backrooms-yellow to-backrooms-yellow-dark border-none rounded-lg text-backrooms-dark text-base font-bold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(255,220,100,0.4)]"
-          >
-            <span>➕</span> Crear Sala
-          </button>
-        </div>
+        <button
+          @click="showCreateModal = true"
+          class="flex items-center gap-2 px-6 py-3 bg-gradient-to-br from-backrooms-yellow to-backrooms-yellow-dark border-none rounded-lg text-backrooms-dark text-base font-bold cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(255,220,100,0.4)]"
+        >
+          <span>➕</span> Crear Sala
+        </button>
       </div>
 
       <div class="bg-backrooms-dark/60 border-2 border-backrooms-yellow/20 rounded-xl p-8">
@@ -31,8 +23,8 @@
 
         <div v-else-if="rooms.length === 0" class="text-center py-16 px-5">
           <p class="text-6xl mb-5">🚪</p>
-          <p class="text-xl text-gray-300 mb-2">No hay salas públicas disponibles</p>
-          <p class="text-gray-400">Crea una nueva sala o únete con un código</p>
+          <p class="text-xl text-gray-300 mb-2">No hay salas disponibles</p>
+          <p class="text-gray-400">Crea una nueva sala para empezar a jugar</p>
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -135,89 +127,12 @@
             </select>
           </div>
 
-          <div class="mb-5">
-            <label class="block text-gray-300 mb-2 text-sm font-medium">Tipo de Sala</label>
-            <div class="flex gap-4">
-              <label class="flex-1 cursor-pointer">
-                <input
-                  type="radio"
-                  v-model="newRoom.isPublic"
-                  :value="true"
-                  class="sr-only peer"
-                />
-                <div class="px-4 py-3 bg-black/40 border-2 rounded-md text-center transition-all peer-checked:border-green-400 peer-checked:bg-green-500/10 peer-checked:text-green-300 border-backrooms-yellow/20 text-gray-300">
-                  🌍 Pública
-                </div>
-              </label>
-              <label class="flex-1 cursor-pointer">
-                <input
-                  type="radio"
-                  v-model="newRoom.isPublic"
-                  :value="false"
-                  class="sr-only peer"
-                />
-                <div class="px-4 py-3 bg-black/40 border-2 rounded-md text-center transition-all peer-checked:border-purple-400 peer-checked:bg-purple-500/10 peer-checked:text-purple-300 border-backrooms-yellow/20 text-gray-300">
-                  🔒 Privada
-                </div>
-              </label>
-            </div>
-            <p class="text-gray-400 text-xs mt-2">
-              {{ newRoom.isPublic ? 'Visible en el lobby para todos' : 'Solo accesible con código' }}
-            </p>
-          </div>
-
           <button
             type="submit"
             :disabled="creating"
             class="w-full py-3.5 bg-gradient-to-br from-backrooms-yellow to-backrooms-yellow-dark border-none rounded-md text-backrooms-dark text-lg font-bold cursor-pointer transition-all duration-300 uppercase tracking-wider hover:not(:disabled):-translate-y-0.5 hover:not(:disabled):shadow-[0_6px_20px_rgba(255,220,100,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {{ creating ? 'Creando...' : 'Crear Sala' }}
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Join with Code Modal -->
-    <div
-      v-if="showJoinCodeModal"
-      @click.self="showJoinCodeModal = false"
-      class="fixed top-0 left-0 w-full h-full bg-black/85 flex items-center justify-center z-[2000]"
-    >
-      <div class="bg-backrooms-dark/[0.98] border-2 border-blue-400/30 rounded-xl p-8 w-[90%] max-w-md">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-blue-300 text-3xl">Unirse con Código</h2>
-          <button
-            @click="showJoinCodeModal = false"
-            class="bg-transparent border-none text-gray-400 text-2xl cursor-pointer transition-colors duration-200 hover:text-white"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form @submit.prevent="handleJoinByCode">
-          <div v-if="joinCodeError" class="bg-red-600/20 border border-red-500/50 text-red-300 px-3 py-3 rounded-md mb-5 text-sm">
-            {{ joinCodeError }}
-          </div>
-
-          <div class="mb-5">
-            <label class="block text-gray-300 mb-2 text-sm font-medium">Código de Sala (6 caracteres)</label>
-            <input
-              v-model="roomCode"
-              type="text"
-              placeholder="ABC123"
-              maxlength="6"
-              required
-              class="w-full px-4 py-3 bg-black/40 border border-blue-400/20 rounded-md text-white text-center text-2xl font-mono tracking-widest uppercase focus:outline-none focus:border-blue-400 focus:shadow-[0_0_15px_rgba(100,150,255,0.2)]"
-              @input="roomCode = roomCode.toUpperCase()"
-            />
-          </div>
-
-          <button
-            type="submit"
-            :disabled="joiningByCode || roomCode.length !== 6"
-            class="w-full py-3.5 bg-gradient-to-br from-blue-500 to-blue-700 border-none rounded-md text-white text-lg font-bold cursor-pointer transition-all duration-300 uppercase tracking-wider hover:not(:disabled):-translate-y-0.5 hover:not(:disabled):shadow-[0_6px_20px_rgba(100,150,255,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {{ joiningByCode ? 'Uniéndose...' : 'Unirse' }}
           </button>
         </form>
       </div>
@@ -238,20 +153,14 @@ const authStore = useAuthStore()
 const rooms = ref([])
 const loading = ref(false)
 const error = ref(null)
-const currentRoomId = ref(null)
+const currentRoomId = ref(null) // Sala actual del usuario
 
 const showCreateModal = ref(false)
 const creating = ref(false)
 const newRoom = ref({
   name: '',
-  maxPlayers: '4',
-  isPublic: true
+  maxPlayers: '4'
 })
-
-const showJoinCodeModal = ref(false)
-const roomCode = ref('')
-const joinCodeError = ref(null)
-const joiningByCode = ref(false)
 
 async function loadRooms() {
   loading.value = true
@@ -274,22 +183,13 @@ async function handleCreateRoom() {
   error.value = null
 
   try {
-    const response = await roomAPI.createRoom(
-      newRoom.value.name,
-      parseInt(newRoom.value.maxPlayers),
-      newRoom.value.isPublic
-    )
+    const response = await roomAPI.createRoom(newRoom.value.name, parseInt(newRoom.value.maxPlayers))
 
     if (response.success) {
-      console.log('✅ Sala creada:', response.data.room)
       showCreateModal.value = false
-      const roomId = response.data.room.id
-      currentRoomId.value = roomId
-      localStorage.setItem('currentRoomId', roomId)
-      router.push(`/room/${roomId}`)
+      router.push(`/room/${response.data.room.id}`)
     }
   } catch (err) {
-    console.error('❌ Error al crear sala:', err)
     error.value = err.message || 'Error al crear sala'
   } finally {
     creating.value = false
@@ -301,6 +201,7 @@ async function handleJoinRoom(roomId) {
     const response = await roomAPI.joinRoom(roomId)
     if (response.success) {
       currentRoomId.value = roomId
+      // TODO: Guardar en localStorage o store
       localStorage.setItem('currentRoomId', roomId)
       router.push(`/room/${roomId}`)
     }
@@ -309,32 +210,18 @@ async function handleJoinRoom(roomId) {
   }
 }
 
-async function handleJoinByCode() {
-  joiningByCode.value = true
-  joinCodeError.value = null
-
-  try {
-    const response = await roomAPI.joinRoomByCode(roomCode.value)
-    if (response.success) {
-      showJoinCodeModal.value = false
-      currentRoomId.value = response.data.room.id
-      localStorage.setItem('currentRoomId', response.data.room.id)
-      router.push(`/room/${response.data.room.id}`)
-    }
-  } catch (err) {
-    joinCodeError.value = err.message || 'Error al unirse con código'
-  } finally {
-    joiningByCode.value = false
-  }
-}
-
 async function handleLeaveRoom(roomId) {
   if (confirm('¿Estás seguro de que quieres salir de esta sala?')) {
     try {
-      await roomAPI.leaveRoom(roomId)
+      // TODO: Llamar API para salir de la sala
+      // const response = await roomAPI.leaveRoom(roomId)
+
       currentRoomId.value = null
       localStorage.removeItem('currentRoomId')
+
+      // Recargar salas
       await loadRooms()
+
       alert('Has salido de la sala exitosamente')
     } catch (err) {
       alert(err.message || 'Error al salir de la sala')
@@ -347,6 +234,7 @@ function isCurrentRoom(roomId) {
 }
 
 onMounted(() => {
+  // Recuperar sala actual del localStorage
   const savedRoomId = localStorage.getItem('currentRoomId')
   if (savedRoomId) {
     currentRoomId.value = parseInt(savedRoomId)
@@ -356,3 +244,4 @@ onMounted(() => {
   setInterval(loadRooms, 5000)
 })
 </script>
+

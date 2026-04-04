@@ -11,14 +11,14 @@ const generateRoomCode = () => {
 }
 
 // Crear una nueva sala
-export const createRoom = async (hostId, roomName, maxPlayers = 4) => {
+export const createRoom = async (hostId, roomName, maxPlayers = 4, isPublic = true) => {
   const roomCode = generateRoomCode()
   const minPlayers = 2
 
   const [result] = await pool.execute(
-    `INSERT INTO game_sessions (room_code, room_name, host_id, min_players, max_players, status)
-     VALUES (?, ?, ?, ?, ?, 'waiting')`,
-    [roomCode, roomName, hostId, minPlayers, maxPlayers]
+    `INSERT INTO game_sessions (room_code, room_name, host_id, min_players, max_players, is_public, status)
+     VALUES (?, ?, ?, ?, ?, ?, 'waiting')`,
+    [roomCode, roomName, hostId, minPlayers, maxPlayers, isPublic]
   )
 
   // Agregar al host como primer jugador
@@ -34,6 +34,7 @@ export const createRoom = async (hostId, roomName, maxPlayers = 4) => {
     hostId,
     minPlayers,
     maxPlayers,
+    isPublic,
     status: 'waiting'
   }
 }
@@ -62,7 +63,7 @@ export const getRoomByCode = async (roomCode) => {
   return rooms[0] || null
 }
 
-// Obtener todas las salas disponibles (en espera y con espacio)
+// Obtener todas las salas disponibles (en espera y con espacio) - SOLO PÚBLICAS
 export const getAvailableRooms = async () => {
   const [rooms] = await pool.execute(
     `SELECT
@@ -73,13 +74,14 @@ export const getAvailableRooms = async () => {
        u.username as host_username,
        gs.min_players,
        gs.max_players,
+       gs.is_public,
        gs.status,
        gs.created_at,
        COUNT(rp.id) as current_players
      FROM game_sessions gs
      JOIN users u ON gs.host_id = u.id
      LEFT JOIN room_players rp ON gs.id = rp.session_id
-     WHERE gs.status = 'waiting'
+     WHERE gs.status = 'waiting' AND gs.is_public = TRUE
      GROUP BY gs.id
      HAVING current_players < gs.max_players
      ORDER BY gs.created_at DESC`

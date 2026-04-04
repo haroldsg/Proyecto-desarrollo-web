@@ -3,7 +3,7 @@ import Room from '../models/Room.js'
 // Crear una nueva sala
 export const createRoom = async (req, res) => {
   try {
-    const { roomName, maxPlayers = 4 } = req.body
+    const { roomName, maxPlayers = 4, isPublic = true } = req.body
     const hostId = req.user.id
 
     // Validar maxPlayers (1-4, permitir juego solo)
@@ -23,7 +23,7 @@ export const createRoom = async (req, res) => {
       })
     }
 
-    const room = await Room.createRoom(hostId, roomName || 'Sala de Backrooms', maxPlayers)
+    const room = await Room.createRoom(hostId, roomName || 'Sala de Backrooms', maxPlayers, isPublic)
 
     // Emitir evento de socket (si está disponible)
     if (req.io) {

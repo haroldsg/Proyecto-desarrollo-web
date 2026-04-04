@@ -2,7 +2,15 @@
   <div class="min-h-screen bg-gradient-to-br from-[#1a1a1a] via-[#2d2416] to-[#1a1a1a]">
     <NavBar />
 
-    <div class="max-w-[1400px] mx-auto px-5 py-5">
+    <!-- Loading State -->
+    <div v-if="loading" class="max-w-[1400px] mx-auto px-5 py-20">
+      <div class="text-center">
+        <div class="w-16 h-16 mx-auto mb-5 border-4 border-backrooms-yellow/20 border-t-backrooms-yellow rounded-full animate-spin"></div>
+        <p class="text-backrooms-yellow text-xl">Cargando sala...</p>
+      </div>
+    </div>
+
+    <div v-else class="max-w-[1400px] mx-auto px-5 py-5">
       <!-- Room Header -->
       <div class="flex flex-col lg:flex-row justify-between items-center mb-8 p-5 bg-backrooms-dark-light/60 border-2 border-backrooms-yellow/20 rounded-xl gap-4">
         <div class="w-full lg:w-auto">
@@ -39,10 +47,8 @@
               :key="player.id"
               class="flex items-center gap-4 p-4 bg-black/40 border rounded-lg transition-all duration-300"
               :class="{
-                'border-backrooms-yellow/50 bg-backrooms-yellow/5': player.isHost,
-                'border-green-500/30': player.isReady && !player.isHost,
-                'border-backrooms-yellow/20': !player.isHost && !player.isReady,
-                'border-dashed opacity-40': false
+                'border-backrooms-yellow/50 bg-backrooms-yellow/5': player.is_host,
+                'border-backrooms-yellow/20': !player.is_host
               }"
             >
               <div class="w-[50px] h-[50px] rounded-full bg-gradient-to-br from-backrooms-yellow to-backrooms-yellow-dark flex items-center justify-center text-2xl font-bold text-backrooms-dark">
@@ -51,22 +57,10 @@
               <div class="flex-1 flex items-center gap-2 flex-wrap">
                 <span class="text-white font-semibold text-lg">{{ player.username }}</span>
                 <span
-                  v-if="player.isHost"
+                  v-if="player.is_host"
                   class="bg-backrooms-yellow/20 text-backrooms-yellow px-2.5 py-1 rounded text-[0.85rem] font-semibold"
                 >
                   👑 Host
-                </span>
-                <span
-                  v-else-if="player.isReady"
-                  class="bg-green-500/20 text-[#6f6] px-2.5 py-1 rounded text-[0.85rem] font-semibold"
-                >
-                  ✓ Listo
-                </span>
-                <span
-                  v-else
-                  class="bg-[#969696]/20 text-[#999] px-2.5 py-1 rounded text-[0.85rem]"
-                >
-                  ⏳ Esperando
                 </span>
               </div>
             </div>
@@ -86,35 +80,21 @@
             </div>
           </div>
 
-          <!-- Ready Button (only for non-host players) -->
-          <div v-if="!isHost" class="mt-5 pt-5 border-t border-backrooms-yellow/10">
-            <button
-              @click="toggleReady"
-              class="w-full py-3.5 bg-green-500/10 border-2 rounded-lg text-[#6f6] text-lg font-bold cursor-pointer transition-all duration-300 hover:bg-green-500/20 hover:-translate-y-0.5"
-              :class="{
-                'bg-green-500/20 border-green-500/50': isReady,
-                'border-green-500/30': !isReady
-              }"
-            >
-              {{ isReady ? '✓ Listo' : 'Marcar como Listo' }}
-            </button>
-          </div>
-
           <!-- Start Game Button (only for host) -->
           <div v-if="isHost" class="mt-5 pt-5 border-t border-backrooms-yellow/10">
             <button
               @click="startGame"
-              :disabled="!allPlayersReady"
+              :disabled="!canStartGame"
               class="w-full py-3.5 border-none rounded-lg text-backrooms-dark text-lg font-bold cursor-pointer transition-all duration-300 uppercase disabled:opacity-50 disabled:cursor-not-allowed"
               :class="{
-                'bg-gradient-to-br from-backrooms-yellow to-backrooms-yellow-dark hover:shadow-[0_6px_20px_rgba(255,220,100,0.4)] hover:-translate-y-0.5': allPlayersReady,
-                'bg-[#646464]/30': !allPlayersReady
+                'bg-gradient-to-br from-backrooms-yellow to-backrooms-yellow-dark hover:shadow-[0_6px_20px_rgba(255,220,100,0.4)] hover:-translate-y-0.5': canStartGame,
+                'bg-[#646464]/30': !canStartGame
               }"
             >
-              {{ allPlayersReady ? '🎮 Iniciar Juego' : '⏳ Esperando jugadores...' }}
+              {{ canStartGame ? '🎮 Iniciar Juego' : '⏳ Esperando jugadores...' }}
             </button>
-            <p v-if="!allPlayersReady" class="text-center text-[#999] text-sm mt-2.5">
-              Todos los jugadores deben estar listos para comenzar
+            <p v-if="!canStartGame" class="text-center text-[#999] text-sm mt-2.5">
+              Se necesitan al menos 2 jugadores para iniciar
             </p>
           </div>
         </div>
@@ -172,110 +152,117 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { roomAPI } from '@/services/api'
+import socketService from '@/services/socket'
 import NavBar from '@/components/NavBar.vue'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 
-// Room data (esto vendrá del backend con Socket.io)
+const roomId = route.params.id
+
+// Room data
 const roomData = ref({
-  id: route.params.id,
-  name: 'Sala de Ejemplo',
-  code: 'ABC123',
+  id: roomId,
+  name: '',
+  code: '',
   maxPlayers: 4
 })
 
 // Players data
-const players = ref([
-  { id: 1, username: authStore.user?.username || 'Usuario', isHost: true, isReady: false },
-  { id: 2, username: 'Jugador2', isHost: false, isReady: true },
-  { id: 3, username: 'Jugador3', isHost: false, isReady: false }
-])
+const players = ref([])
 
 // Chat data
-const messages = ref([
-  { id: 1, userId: 1, username: authStore.user?.username || 'Usuario', text: '¡Hola a todos!', timestamp: Date.now() - 120000 },
-  { id: 2, userId: 2, username: 'Jugador2', text: 'Hola! Listo para jugar', timestamp: Date.now() - 60000 }
-])
-
+const messages = ref([])
 const messageInput = ref('')
 const chatContainer = ref(null)
-const currentUserId = ref(authStore.user?.id || 1)
-const isReady = ref(false)
+const currentUserId = computed(() => authStore.user?.id)
+const loading = ref(true)
 
 // Computed
 const isHost = computed(() => {
-  const currentPlayer = players.value.find(p => p.id === currentUserId.value)
-  return currentPlayer?.isHost || false
+  const currentPlayer = players.value.find(p => p.user_id === currentUserId.value)
+  return currentPlayer?.is_host || false
 })
 
-const allPlayersReady = computed(() => {
-  const nonHostPlayers = players.value.filter(p => !p.isHost)
-  return nonHostPlayers.length > 0 && nonHostPlayers.every(p => p.isReady)
+const canStartGame = computed(() => {
+  return players.value.length >= 2
 })
 
 // Methods
-function toggleReady() {
-  isReady.value = !isReady.value
-  const currentPlayer = players.value.find(p => p.id === currentUserId.value)
-  if (currentPlayer) {
-    currentPlayer.isReady = isReady.value
+async function loadRoomData() {
+  try {
+    console.log('🔍 Cargando datos de la sala:', roomId)
+    const response = await roomAPI.getRoomDetails(roomId)
+    console.log('📦 Respuesta del servidor:', response)
+
+    if (response.success) {
+      roomData.value = {
+        id: response.data.room.id,
+        name: response.data.room.room_name,
+        code: response.data.room.room_code,
+        maxPlayers: response.data.room.max_players
+      }
+      players.value = response.data.room.players || []
+
+      console.log('👥 Jugadores cargados:', players.value)
+      console.log('🆔 ID del usuario actual:', currentUserId.value)
+    }
+  } catch (error) {
+    console.error('❌ Error al cargar sala:', error)
+    alert('Error al cargar la sala: ' + (error.message || 'Error desconocido'))
+    router.push('/lobby')
+  } finally {
+    loading.value = false
   }
-  // TODO: Enviar evento Socket.io al backend
 }
 
-function startGame() {
-  if (allPlayersReady.value) {
-    // TODO: Enviar evento Socket.io al backend para iniciar juego
-    router.push('/game')
+async function startGame() {
+  if (!canStartGame.value) return
+
+  try {
+    const response = await roomAPI.startGame(roomId)
+    if (response.success) {
+      // Guardar en localStorage para el juego
+      localStorage.setItem('currentRoomId', roomId)
+      // Socket.io emitirá el evento a todos los jugadores
+    }
+  } catch (error) {
+    console.error('Error al iniciar juego:', error)
+    alert('Error al iniciar el juego')
   }
 }
 
 function sendMessage() {
   if (!messageInput.value.trim()) return
 
-  const newMessage = {
-    id: Date.now(),
-    userId: currentUserId.value,
-    username: authStore.user?.username || 'Usuario',
-    text: messageInput.value.trim(),
-    timestamp: Date.now()
-  }
+  // Emitir mensaje por Socket.io
+  socketService.socket?.emit('chat:message', {
+    roomId,
+    message: messageInput.value.trim()
+  })
 
-  messages.value.push(newMessage)
   messageInput.value = ''
-
-  // TODO: Enviar mensaje por Socket.io al backend
-
-  // Auto-scroll to bottom
-  setTimeout(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
-  }, 50)
 }
 
-function handleLeaveRoom() {
+async function handleLeaveRoom() {
   const confirmMessage = isHost.value
-    ? '¿Estás seguro de que quieres salir? Como host, la sala será eliminada y todos los jugadores serán expulsados.'
+    ? '¿Estás seguro de que quieres salir? La sala será transferida a otro jugador o eliminada.'
     : '¿Estás seguro de que quieres salir de la sala?'
 
   if (confirm(confirmMessage)) {
-    // Si eres el host, eliminar la sala (cuando conectes el backend)
-    if (isHost.value) {
-      // TODO: Enviar evento Socket.io al backend para eliminar la sala
-      console.log('Host saliendo - sala será eliminada')
+    try {
+      await roomAPI.leaveRoom(roomId)
+      localStorage.removeItem('currentRoomId')
+      router.push('/lobby')
+    } catch (error) {
+      console.error('Error al salir de sala:', error)
+      alert('Error al salir de la sala')
     }
-
-    // Limpiar el localStorage
-    localStorage.removeItem('currentRoomId')
-
-    // TODO: Enviar evento Socket.io al backend para salir de la sala
-    router.push('/lobby')
   }
 }
 
@@ -284,16 +271,68 @@ function formatTime(timestamp) {
   return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
 }
 
-onMounted(() => {
-  // TODO: Conectar Socket.io y escuchar eventos
-  // - player-joined
-  // - player-left
-  // - player-ready
-  // - chat-message
-  // - game-started
+function scrollChatToBottom() {
+  nextTick(() => {
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    }
+  })
+}
+
+onMounted(async () => {
+  console.log('🚀 RoomView montado - ID de sala:', roomId)
+  console.log('👤 Usuario actual:', authStore.user)
+
+  // Conectar socket si no está conectado
+  const token = localStorage.getItem('backrooms_token')
+  if (token && !socketService.connected) {
+    socketService.connect(token)
+  }
+
+  await loadRoomData()
+
+  // Unirse al room de Socket.io
+  console.log('🔌 Uniéndose al socket room:', roomId)
+  socketService.socket?.emit('room:join', { roomId })
+
+  // Escuchar eventos de Socket.io
+  socketService.socket?.on('room:playerJoined', (data) => {
+    console.log('Jugador se unió:', data)
+    loadRoomData() // Recargar datos
+  })
+
+  socketService.socket?.on('room:playerLeft', (data) => {
+    console.log('Jugador salió:', data)
+    loadRoomData() // Recargar datos
+  })
+
+  socketService.socket?.on('room:gameStarted', (data) => {
+    console.log('Juego iniciado:', data)
+    // Redirigir a todos a /game
+    localStorage.setItem('currentRoomId', roomId)
+    router.push('/game')
+  })
+
+  socketService.socket?.on('chat:message', (data) => {
+    messages.value.push({
+      id: Date.now(),
+      userId: data.userId,
+      username: data.username,
+      text: data.message,
+      timestamp: Date.now()
+    })
+    scrollChatToBottom()
+  })
 })
 
 onUnmounted(() => {
-  // TODO: Desconectar Socket.io
+  // Salir del room de Socket.io
+  socketService.socket?.emit('room:leave', { roomId })
+
+  // Limpiar listeners
+  socketService.socket?.off('room:playerJoined')
+  socketService.socket?.off('room:playerLeft')
+  socketService.socket?.off('room:gameStarted')
+  socketService.socket?.off('chat:message')
 })
 </script>

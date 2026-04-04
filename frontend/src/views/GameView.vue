@@ -339,7 +339,7 @@
                 @click="leaveGame"
                 class="w-full py-3 bg-red-500/20 border border-red-500/40 rounded-lg text-red-300 font-semibold transition-all duration-300 hover:bg-red-500/30"
               >
-                Salir al Lobby
+                Salir al menú principal
               </button>
             </div>
           </div>
@@ -640,7 +640,7 @@ function continueGame() {
 
 function leaveGame() {
   if (confirm('¿Seguro que quieres Salir?')) {
-    router.push('/lobby')
+    router.push('/game-mode')
   }
 }
 

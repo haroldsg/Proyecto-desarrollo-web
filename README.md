@@ -267,11 +267,11 @@ Ver guía completa en [docs/TESTING_API.md]
 
 ---
 
-### ✅ FASE 5: Sistema de Guardado de Progreso y Ajustes
+### ✅ FASE 5: Sistema de Guardado de Progreso y Gestión de Salas Multijugador
 
-**Cambios agregados:**
+#### **FASE 5.0: Sistema de Guardado Automático de Progreso**
 
-**1. Sistema de Guardado Automático de Progreso**
+**1. Sistema de Guardado Automático**
 - ✅ Guardado automático del escenario actual del jugador
 - ✅ Guardado automático del inventario completo
 - ✅ Carga automática del progreso al reiniciar la partida
@@ -304,6 +304,72 @@ getPlayerInventory(sessionId, userId)             // Obtener items
 - Solo 1 partida activa por usuario a la vez
 - Al crear nueva partida, se abandona automáticamente la anterior (con confirmación)
 - El sistema previene conflictos entre partidas solo/multijugador
+
+---
+
+#### **FASE 5.1: Sistema de Salas Multijugador Completo**
+
+**1. Sistema de Salas Públicas/Privadas**
+- ✅ Salas públicas visibles en el lobby
+- ✅ Salas privadas accesibles solo con código de 6 caracteres
+- ✅ Vista de lobby con grid de salas disponibles
+- ✅ Modal de "Unirse con Código" para salas privadas
+- ✅ Auto-refresh del lobby cada 5 segundos
+
+**2. Vista de Sala (RoomView)**
+- ✅ Sistema de chat en tiempo real con Socket.io
+- ✅ Lista de jugadores con indicador de host (👑)
+- ✅ Slots vacíos visuales para jugadores pendientes
+- ✅ Botón de "Iniciar Juego" para el host (activo con ≥2 jugadores)
+- ✅ Sistema simplificado sin estado "listo" (el host inicia cuando quiere)
+- ✅ Transferencia automática de host al salir
+- ✅ Eliminación automática de sala cuando el último jugador sale
+
+**3. Modificaciones de Base de Datos**
+```sql
+-- Campo agregado a game_sessions:
+- is_public BOOLEAN DEFAULT TRUE
+
+-- Campo ELIMINADO de room_players:
+- is_ready BOOLEAN  -- Sistema simplificado sin estado "listo"
+```
+
+**4. Eventos de Socket.io Implementados**
+```javascript
+// Eventos de sala
+'room:join'              // Unirse a una sala (socket room)
+'room:leave'             // Salir de una sala
+'room:playerJoined'      // Notificación cuando un jugador se une
+'room:playerLeft'        // Notificación cuando un jugador sale
+'room:gameStarted'       // Host inicia el juego, redirige a todos
+'room:playerConnected'   // Jugador se conecta al socket
+'room:playerDisconnected' // Jugador se desconecta
+
+// Eventos de chat
+'chat:message'           // Enviar/recibir mensajes
+```
+
+**5. Flujo Mejorado de Navegación**
+- ✅ Ruta raíz redirige a `/game-mode` (en lugar de `/lobby`)
+- ✅ GameModeView como hub central del juego
+- ✅ Botón "Crear Sala" va directamente al lobby (sin warnings)
+- ✅ Botón "Salir de la Partida" con modal de confirmación
+- ✅ Separación clara entre acciones destructivas y navegación
+
+**6. Sistema de Socket.io Mejorado**
+- ✅ Autenticación mediante JWT en handshake
+- ✅ Soporte para datos en formato objeto o primitivo
+- ✅ Verificación de permisos (usuario debe estar en la sala)
+- ✅ Notificaciones en tiempo real a todos los jugadores
+- ✅ Manejo de desconexiones temporales
+
+**Arquitectura del Sistema Multijugador:**
+1. Usuario crea sala (pública/privada) → se une automáticamente como host
+2. Otros jugadores ven la sala en lobby (si es pública) o usan código (si es privada)
+3. Jugadores se unen → RoomView muestra lista actualizada en tiempo real
+4. Host puede iniciar cuando hay ≥2 jugadores
+5. Al iniciar, todos los jugadores son redirigidos a `/game` simultáneamente
+6. Chat funcional durante la espera en la sala
 
 ---
 
