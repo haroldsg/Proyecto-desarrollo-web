@@ -7,7 +7,9 @@ import {
   joinRoomByCode,
   leaveRoom,
   startGame,
-  getCurrentRoom
+  getCurrentRoom,
+  saveProgress,
+  loadProgress
 } from '../controllers/roomController.js'
 import { authenticateToken } from '../middleware/auth.js'
 
@@ -63,5 +65,17 @@ router.post('/:id/leave', leaveRoom)
  * Iniciar el juego (solo host)
  */
 router.post('/:id/start', startGame)
+
+/**
+ * POST /api/rooms/:sessionId/progress/save
+ * Guardar progreso del jugador (escenario e inventario)
+ */
+router.post('/:sessionId/progress/save', saveProgress)
+
+/**
+ * GET /api/rooms/:sessionId/progress/load
+ * Cargar progreso del jugador
+ */
+router.get('/:sessionId/progress/load', loadProgress)
 
 export default router

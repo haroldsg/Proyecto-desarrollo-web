@@ -59,14 +59,17 @@ CREATE TABLE IF NOT EXISTS room_players (
   session_id INT NOT NULL,
   user_id INT NOT NULL,
   is_host BOOLEAN DEFAULT FALSE,
+  current_scene_id VARCHAR(50) DEFAULT 'inicio',
   joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_saved TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 
   UNIQUE KEY unique_player_session (session_id, user_id),
   INDEX idx_session (session_id),
-  INDEX idx_user (user_id)
+  INDEX idx_user (user_id),
+  INDEX idx_current_scene (current_scene_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ========================================

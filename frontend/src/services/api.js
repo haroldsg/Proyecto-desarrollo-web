@@ -77,7 +77,13 @@ export const roomAPI = {
     api.post(`/api/rooms/${roomId}/leave`),
 
   startGame: (roomId) =>
-    api.post(`/api/rooms/${roomId}/start`)
+    api.post(`/api/rooms/${roomId}/start`),
+
+  saveProgress: (sessionId, sceneId, inventory) =>
+    api.post(`/api/rooms/${sessionId}/progress/save`, { sceneId, inventory }),
+
+  loadProgress: (sessionId) =>
+    api.get(`/api/rooms/${sessionId}/progress/load`)
 }
 
 export default api

@@ -238,13 +238,68 @@ export const startGame = async (roomId, hostId) => {
 // Obtener sala donde está un usuario
 export const getUserCurrentRoom = async (userId) => {
   const [rooms] = await pool.execute(
-    `SELECT gs.*, rp.is_host
+    `SELECT gs.*, rp.is_host, rp.current_scene_id
      FROM game_sessions gs
      JOIN room_players rp ON gs.id = rp.session_id
      WHERE rp.user_id = ? AND gs.status IN ('waiting', 'playing')`,
     [userId]
   )
   return rooms[0] || null
+}
+
+// Guardar progreso del jugador (escenario actual)
+export const savePlayerProgress = async (sessionId, userId, sceneId) => {
+  await pool.execute(
+    `UPDATE room_players
+     SET current_scene_id = ?, last_saved = CURRENT_TIMESTAMP
+     WHERE session_id = ? AND user_id = ?`,
+    [sceneId, sessionId, userId]
+  )
+  return true
+}
+
+// Obtener progreso del jugador
+export const getPlayerProgress = async (sessionId, userId) => {
+  const [result] = await pool.execute(
+    `SELECT current_scene_id, last_saved
+     FROM room_players
+     WHERE session_id = ? AND user_id = ?`,
+    [sessionId, userId]
+  )
+  return result[0] || null
+}
+
+// Guardar inventario del jugador
+export const savePlayerInventory = async (sessionId, userId, items) => {
+  // Primero eliminar items anteriores
+  await pool.execute(
+    `DELETE FROM inventories WHERE session_id = ? AND user_id = ?`,
+    [sessionId, userId]
+  )
+
+  // Insertar nuevos items uno por uno
+  if (items && items.length > 0) {
+    for (const item of items) {
+      await pool.execute(
+        `INSERT INTO inventories (session_id, user_id, item_name, quantity) VALUES (?, ?, ?, ?)`,
+        [sessionId, userId, item.name, item.quantity || 1]
+      )
+    }
+  }
+
+  return true
+}
+
+// Obtener inventario del jugador
+export const getPlayerInventory = async (sessionId, userId) => {
+  const [items] = await pool.execute(
+    `SELECT item_name, quantity, acquired_at
+     FROM inventories
+     WHERE session_id = ? AND user_id = ?
+     ORDER BY acquired_at ASC`,
+    [sessionId, userId]
+  )
+  return items
 }
 
 export default {
@@ -260,5 +315,9 @@ export default {
   deleteRoom,
   updateRoomStatus,
   startGame,
-  getUserCurrentRoom
+  getUserCurrentRoom,
+  savePlayerProgress,
+  getPlayerProgress,
+  savePlayerInventory,
+  getPlayerInventory
 }

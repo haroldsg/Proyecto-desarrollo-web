@@ -267,6 +267,46 @@ Ver guía completa en [docs/TESTING_API.md]
 
 ---
 
+### ✅ FASE 5: Sistema de Guardado de Progreso y Ajustes
+
+**Cambios agregados:**
+
+**1. Sistema de Guardado Automático de Progreso**
+- ✅ Guardado automático del escenario actual del jugador
+- ✅ Guardado automático del inventario completo
+- ✅ Carga automática del progreso al reiniciar la partida
+- ✅ Sistema de "Continuar Partida" en GameModeView
+- ✅ Advertencia al crear nueva partida (pérdida de progreso)
+
+**2. Modificaciones de Base de Datos**
+```sql
+-- Campos agregados a room_players:
+- current_scene_id VARCHAR(50) DEFAULT 'inicio'  -- Escenario actual
+- last_saved TIMESTAMP                            -- Última vez guardado
+- INDEX idx_current_scene                         -- Índice para búsquedas
+```
+
+**3. Nuevos Endpoints de Backend**
+```bash
+POST /api/rooms/:sessionId/progress/save  # Guardar progreso (escenario + inventario)
+GET  /api/rooms/:sessionId/progress/load  # Cargar progreso guardado
+```
+
+**4. Funciones del Modelo (Room.js)**
+```javascript
+savePlayerProgress(sessionId, userId, sceneId)    // Guardar escenario
+getPlayerProgress(sessionId, userId)              // Obtener escenario
+savePlayerInventory(sessionId, userId, items)     // Guardar items
+getPlayerInventory(sessionId, userId)             // Obtener items
+```
+
+**Política de sesiones:**
+- Solo 1 partida activa por usuario a la vez
+- Al crear nueva partida, se abandona automáticamente la anterior (con confirmación)
+- El sistema previene conflictos entre partidas solo/multijugador
+
+---
+
 ## 📚 Documentación
 
 Toda la documentación técnica está en la carpeta `docs/`:

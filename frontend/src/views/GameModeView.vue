@@ -28,13 +28,27 @@
       </div>
 
       <div class="max-w-md mx-auto space-y-5 mb-[60px]">
+        <!-- Continuar Partida (si hay partida activa) -->
+        <div
+          v-if="activeRoom"
+          @click="handleContinue"
+          class="bg-gradient-to-br from-backrooms-yellow/20 to-backrooms-yellow/10 border-2 border-backrooms-yellow rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:from-backrooms-yellow/30 hover:to-backrooms-yellow/20 hover:shadow-[0_8px_30px_rgba(255,220,100,0.3)] hover:-translate-y-1"
+        >
+          <h2 class="text-backrooms-yellow text-3xl text-center font-['Courier_New',monospace] tracking-wide">
+            Continuar Partida
+          </h2>
+          <p class="text-backrooms-yellow/70 text-sm text-center mt-2">
+            {{ activeRoom.room_name }}
+          </p>
+        </div>
+
         <!-- Jugar Solo -->
         <div
           @click="handleSoloPlay"
           class="bg-backrooms-dark-light/80 rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-backrooms-dark-light hover:border-backrooms-yellow/60 hover:shadow-[0_8px_30px_rgba(255,220,100,0.2)] hover:-translate-y-1"
         >
           <h2 class="text-backrooms-yellow text-3xl text-center font-['Courier_New',monospace] tracking-wide">
-            Jugar Solo
+            {{ activeRoom ? 'Nueva Partida Solo' : 'Jugar Solo' }}
           </h2>
         </div>
 
@@ -46,6 +60,39 @@
           <h2 class="text-backrooms-yellow text-3xl text-center font-['Courier_New',monospace] tracking-wide">
             Crear Sala
           </h2>
+        </div>
+      </div>
+
+      <!-- Modal de Advertencia -->
+      <div
+        v-if="showWarning"
+        class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-5"
+        @click.self="showWarning = false"
+      >
+        <div class="bg-backrooms-dark border-2 border-red-500/50 rounded-lg p-8 max-w-md w-full">
+          <h3 class="text-red-400 text-2xl font-['Courier_New',monospace] mb-4 text-center">
+            ⚠️ ADVERTENCIA
+          </h3>
+          <p class="text-white/90 text-center mb-6">
+            Ya tienes una partida activa. Si continúas, <span class="text-red-400 font-bold">perderás todo el progreso</span> de tu partida anterior.
+          </p>
+          <p class="text-backrooms-yellow/70 text-sm text-center mb-6">
+            Partida actual: {{ activeRoom?.room_name }}
+          </p>
+          <div class="flex gap-4">
+            <button
+              @click="showWarning = false"
+              class="flex-1 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-lg text-backrooms-yellow font-semibold transition-all duration-300 hover:bg-backrooms-yellow/20"
+            >
+              Cancelar
+            </button>
+            <button
+              @click="confirmNewGame"
+              class="flex-1 py-3 bg-gradient-to-br from-red-600 to-red-800 border-none rounded-lg text-white font-bold transition-all duration-300 hover:from-red-700 hover:to-red-900"
+            >
+              Abandonar y Continuar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -80,11 +127,19 @@ const backgrounds = [
 const currentBgIndex = ref(0)
 let bgInterval = null
 
-onMounted(() => {
+// Estado de partida activa
+const activeRoom = ref(null)
+const showWarning = ref(false)
+const pendingAction = ref(null) // 'solo' o 'multiplayer'
+
+onMounted(async () => {
   // Cambiar background cada 7 segundos
   bgInterval = setInterval(() => {
     currentBgIndex.value = (currentBgIndex.value + 1) % backgrounds.length
   }, 7000)
+
+  // Verificar si hay partida activa
+  await checkActiveRoom()
 })
 
 onUnmounted(() => {
@@ -93,20 +148,51 @@ onUnmounted(() => {
   }
 })
 
-async function handleSoloPlay() {
+// Verificar si el usuario tiene una partida activa
+async function checkActiveRoom() {
   try {
-    // Crear una sala solo para el jugador
+    const response = await roomAPI.getCurrentRoom()
+    if (response.success && response.data.room) {
+      activeRoom.value = response.data.room
+    }
+  } catch (err) {
+    // No hay partida activa o error
+    activeRoom.value = null
+  }
+}
+
+// Continuar partida existente
+function handleContinue() {
+  if (activeRoom.value) {
+    localStorage.setItem('currentRoomId', activeRoom.value.id)
+    router.push('/game')
+  }
+}
+
+// Manejar inicio de partida solo
+async function handleSoloPlay() {
+  // Si hay partida activa, mostrar advertencia
+  if (activeRoom.value) {
+    pendingAction.value = 'solo'
+    showWarning.value = true
+    return
+  }
+
+  // Si no hay partida activa, crear directamente
+  await createSoloGame()
+}
+
+// Crear partida solo
+async function createSoloGame() {
+  try {
     const response = await roomAPI.createRoom(
       `${authStore.user?.username || 'Jugador'} - Solo`,
       1 // Máximo 1 jugador
     )
 
     if (response.success) {
-      // Guardar en localStorage
       localStorage.setItem('currentRoomId', response.data.room.id)
       localStorage.setItem('isSoloGame', 'true')
-
-      // Ir directamente al juego
       router.push('/game')
     }
   } catch (err) {
@@ -114,8 +200,45 @@ async function handleSoloPlay() {
   }
 }
 
+// Manejar creación de sala multijugador
 function handleMultiplayerCreate() {
-  // Redirigir al lobby donde están las opciones de crear sala
+  // Si hay partida activa, mostrar advertencia
+  if (activeRoom.value) {
+    pendingAction.value = 'multiplayer'
+    showWarning.value = true
+    return
+  }
+
+  // Si no hay partida activa, ir al lobby
   router.push('/lobby')
+}
+
+// Confirmar abandono de partida y crear nueva
+async function confirmNewGame() {
+  try {
+    // Abandonar la partida actual
+    if (activeRoom.value) {
+      await roomAPI.leaveRoom(activeRoom.value.id)
+      localStorage.removeItem('currentRoomId')
+      localStorage.removeItem('isSoloGame')
+    }
+
+    // Cerrar modal
+    showWarning.value = false
+
+    // Ejecutar la acción pendiente
+    if (pendingAction.value === 'solo') {
+      await createSoloGame()
+    } else if (pendingAction.value === 'multiplayer') {
+      router.push('/lobby')
+    }
+
+    // Limpiar estado
+    activeRoom.value = null
+    pendingAction.value = null
+  } catch (err) {
+    alert(err.message || 'Error al abandonar la partida')
+    showWarning.value = false
+  }
 }
 </script>

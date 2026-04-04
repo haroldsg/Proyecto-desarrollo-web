@@ -4,14 +4,14 @@
     <div class="flex justify-between items-center px-6 py-3 bg-backrooms-dark-light/95 border-b-2 border-backrooms-yellow/30">
       <div class="flex items-center gap-4">
         <h1 class="text-lg md:text-xl text-backrooms-yellow font-mono">
-          🚪 {{ currentRoom.name }}
+          {{ currentRoom.name }}
         </h1>
       </div>
       <button
         @click="showMenu = !showMenu"
         class="px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-md text-red-300 font-semibold text-sm transition-all duration-300 hover:bg-red-500/30"
       >
-        {{ showMenu ? '✕ Cerrar Menú' : '☰ Menú' }}
+        {{ showMenu ?  '☰ Menú' : '☰ Menú' }}
       </button>
     </div>
 
@@ -325,7 +325,7 @@
       >
         <Transition name="modal-scale" appear>
           <div class="bg-backrooms-dark/98 border-2 border-backrooms-yellow/30 rounded-xl p-8 w-[90%] max-w-md">
-            <h2 class="text-backrooms-yellow text-2xl mb-6">⚙️ Menú</h2>
+            <h2 class="text-backrooms-yellow text-2xl mb-6">Menú</h2>
 
             <div class="flex flex-col gap-3">
               <button
@@ -336,17 +336,10 @@
               </button>
 
               <button
-                @click="saveGame"
-                class="w-full py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/40 rounded-lg text-backrooms-yellow font-semibold transition-all duration-300 hover:bg-backrooms-yellow/20"
-              >
-                💾 Guardar Progreso
-              </button>
-
-              <button
                 @click="leaveGame"
                 class="w-full py-3 bg-red-500/20 border border-red-500/40 rounded-lg text-red-300 font-semibold transition-all duration-300 hover:bg-red-500/30"
               >
-                🚪 Salir al Lobby
+                Salir al Lobby
               </button>
             </div>
           </div>
@@ -357,13 +350,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { roomAPI } from '@/services/api'
 import { roomsMap } from '@/data/roomsMap'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// Session ID
+const currentSessionId = ref(null)
 
 // UI State
 const showMenu = ref(false)
@@ -641,15 +638,8 @@ function continueGame() {
   showMenu.value = false
 }
 
-function saveGame() {
-  console.log('Guardando progreso...')
-  // TODO: Guardar en backend
-  alert('Progreso guardado')
-  showMenu.value = false
-}
-
 function leaveGame() {
-  if (confirm('¿Salir al lobby? El progreso se guardará.')) {
+  if (confirm('¿Seguro que quieres Salir?')) {
     router.push('/lobby')
   }
 }
@@ -694,6 +684,99 @@ function closeExamineModal() {
   showExamineModal.value = false
   keypadInput.value = ''
   keypadMessage.value = ''
+}
+
+// ===== PROGRESS SYSTEM =====
+onMounted(async () => {
+  // Obtener ID de sesión del localStorage
+  currentSessionId.value = localStorage.getItem('currentRoomId')
+
+  if (currentSessionId.value) {
+    await loadGameProgress()
+  }
+})
+
+// Auto-guardar cuando cambia el escenario
+watch(currentRoomId, async (newSceneId) => {
+  if (currentSessionId.value && newSceneId) {
+    await saveGameProgress()
+  }
+})
+
+// Auto-guardar cuando cambia el inventario
+watch(inventory, async () => {
+  if (currentSessionId.value) {
+    await saveGameProgress()
+  }
+}, { deep: true })
+
+// Cargar progreso guardado
+async function loadGameProgress() {
+  try {
+    const response = await roomAPI.loadProgress(currentSessionId.value)
+
+    if (response.success && response.data) {
+      // Cargar escenario guardado
+      if (response.data.sceneId) {
+        currentRoomId.value = response.data.sceneId
+      }
+
+      // Cargar inventario guardado
+      if (response.data.inventory && response.data.inventory.length > 0) {
+        // Mapear los items guardados a la estructura del inventario
+        inventory.value = response.data.inventory.map(item => {
+          // Buscar el item completo en roomsMap para obtener todos sus datos
+          for (const roomId in roomsMap) {
+            const room = roomsMap[roomId]
+            if (room.items) {
+              const fullItem = room.items.find(i => i.name === item.name)
+              if (fullItem) {
+                return { ...fullItem, quantity: item.quantity }
+              }
+            }
+          }
+          // Si no se encuentra, crear un item básico
+          return {
+            name: item.name,
+            quantity: item.quantity,
+            icon: '📦',
+            description: 'Item guardado'
+          }
+        })
+      }
+
+      console.log('Progreso cargado:', response.data)
+    }
+  } catch (error) {
+    console.error('Error al cargar progreso:', error)
+  }
+}
+
+// Guardar progreso
+async function saveGameProgress() {
+  try {
+    // Preparar inventario para guardar (solo nombre y cantidad)
+    const inventoryToSave = inventory.value.map(item => ({
+      name: item.name,
+      quantity: item.quantity || 1
+    }))
+
+    console.log('💾 Guardando progreso:', {
+      sessionId: currentSessionId.value,
+      sceneId: currentRoomId.value,
+      inventory: inventoryToSave
+    })
+
+    await roomAPI.saveProgress(
+      currentSessionId.value,
+      currentRoomId.value,
+      inventoryToSave
+    )
+
+    console.log('✅ Progreso guardado exitosamente')
+  } catch (error) {
+    console.error('❌ Error al guardar progreso:', error)
+  }
 }
 </script>
 

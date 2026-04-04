@@ -330,6 +330,90 @@ export const getCurrentRoom = async (req, res) => {
   }
 }
 
+// Guardar progreso del jugador
+export const saveProgress = async (req, res) => {
+  try {
+    const { sessionId } = req.params
+    const { sceneId, inventory } = req.body
+    const userId = req.user.id
+
+    console.log('📦 Guardando progreso:', { sessionId, userId, sceneId, inventory })
+
+    // Verificar que el usuario está en la sala
+    const isInRoom = await Room.isPlayerInRoom(sessionId, userId)
+    if (!isInRoom) {
+      return res.status(403).json({
+        success: false,
+        message: 'No estás en esta sala'
+      })
+    }
+
+    // Guardar escenario actual
+    if (sceneId) {
+      await Room.savePlayerProgress(sessionId, userId, sceneId)
+      console.log('✅ Escenario guardado:', sceneId)
+    }
+
+    // Guardar inventario
+    if (inventory) {
+      await Room.savePlayerInventory(sessionId, userId, inventory)
+      console.log('✅ Inventario guardado:', inventory.length, 'items')
+    }
+
+    res.json({
+      success: true,
+      message: 'Progreso guardado exitosamente'
+    })
+  } catch (error) {
+    console.error('❌ Error al guardar progreso:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al guardar el progreso',
+      error: error.message
+    })
+  }
+}
+
+// Cargar progreso del jugador
+export const loadProgress = async (req, res) => {
+  try {
+    const { sessionId } = req.params
+    const userId = req.user.id
+
+    // Verificar que el usuario está en la sala
+    const isInRoom = await Room.isPlayerInRoom(sessionId, userId)
+    if (!isInRoom) {
+      return res.status(403).json({
+        success: false,
+        message: 'No estás en esta sala'
+      })
+    }
+
+    // Cargar progreso
+    const progress = await Room.getPlayerProgress(sessionId, userId)
+    const inventory = await Room.getPlayerInventory(sessionId, userId)
+
+    res.json({
+      success: true,
+      data: {
+        sceneId: progress?.current_scene_id || 'inicio',
+        inventory: inventory.map(item => ({
+          name: item.item_name,
+          quantity: item.quantity
+        })),
+        lastSaved: progress?.last_saved
+      }
+    })
+  } catch (error) {
+    console.error('Error al cargar progreso:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Error al cargar el progreso',
+      error: error.message
+    })
+  }
+}
+
 export default {
   createRoom,
   getAvailableRooms,
@@ -338,5 +422,7 @@ export default {
   joinRoomByCode,
   leaveRoom,
   startGame,
-  getCurrentRoom
+  getCurrentRoom,
+  saveProgress,
+  loadProgress
 }
