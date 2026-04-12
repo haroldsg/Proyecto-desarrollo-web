@@ -16,8 +16,84 @@
     </div>
 
     <!-- Main Game Area -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-0 h-[calc(100vh-60px)]">
-      <!-- Left: Game Scene -->
+    <div class="flex-1 grid gap-0 h-[calc(100vh-60px)]"
+      :class="isMultiplayer ? 'grid-cols-1 lg:grid-cols-[350px_1fr_400px]' : 'grid-cols-1 lg:grid-cols-[1fr_400px]'"
+    >
+      <!-- Left: Chat (solo en multijugador) -->
+      <div
+        v-if="isMultiplayer"
+        class="bg-backrooms-dark-light border-r-2 border-backrooms-yellow/20 flex flex-col overflow-hidden"
+      >
+        <!-- Header del Chat -->
+        <div class="px-4 py-3 border-b-2 border-backrooms-yellow/20 bg-black/30">
+          <div class="flex items-center justify-between">
+            <h3 class="text-backrooms-yellow font-semibold text-lg">💬 Chat del Grupo</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-backrooms-yellow text-lg">👥</span>
+              <span class="text-backrooms-yellow/60 text-sm">
+                {{ playersInScene.length }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensajes del Chat -->
+        <div
+          ref="chatMessagesContainer"
+          class="flex-1 overflow-y-auto p-3 space-y-2 bg-black/20"
+        >
+          <div
+            v-for="(msg, index) in chatMessages"
+            :key="index"
+            class="text-sm"
+            :class="{
+              'text-center text-backrooms-yellow/50 text-xs italic': msg.type === 'system',
+              'bg-backrooms-yellow/5 rounded-lg p-2': msg.type === 'message'
+            }"
+          >
+            <!-- Mensaje de Sistema -->
+            <template v-if="msg.type === 'system'">
+              {{ msg.text }}
+            </template>
+
+            <!-- Mensaje de Usuario -->
+            <template v-else>
+              <span class="text-backrooms-yellow font-semibold">{{ msg.username }}:</span>
+              <span class="text-white ml-1">{{ msg.text }}</span>
+              <span class="text-backrooms-yellow/40 text-xs block mt-0.5">
+                {{ formatTime(msg.timestamp) }}
+              </span>
+            </template>
+          </div>
+
+          <div v-if="chatMessages.length === 0" class="text-center text-backrooms-yellow/40 text-sm py-8">
+            No hay mensajes aún
+          </div>
+        </div>
+
+        <!-- Input del Chat -->
+        <form
+          @submit.prevent="sendChatMessage"
+          class="border-t-2 border-backrooms-yellow/20 p-3 flex gap-2 bg-black/30"
+        >
+          <input
+            v-model="chatInput"
+            type="text"
+            placeholder="Escribe un mensaje..."
+            maxlength="200"
+            class="flex-1 px-3 py-2 bg-black/40 border border-backrooms-yellow/20 rounded-md text-white text-sm focus:outline-none focus:border-backrooms-yellow"
+          />
+          <button
+            type="submit"
+            :disabled="!chatInput.trim()"
+            class="px-4 py-2 bg-backrooms-yellow text-backrooms-dark rounded-md font-semibold text-sm transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            ➤
+          </button>
+        </form>
+      </div>
+
+      <!-- Center: Game Scene -->
       <div class="relative bg-gradient-to-br from-[#1a1510] via-[#0a0a0a] to-[#1a1a1a] flex flex-col">
         <!-- Scene Image/Visual -->
         <div class="flex-1 relative overflow-hidden flex items-center justify-center p-4">
@@ -346,15 +422,17 @@
         </Transition>
       </div>
     </Transition>
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { roomAPI } from '@/services/api'
 import { roomsMap } from '@/data/roomsMap'
+import socketService from '@/services/socket'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -375,6 +453,23 @@ const selectedKeyItem = ref(null)
 
 // Keypad State
 const keypadInput = ref('')
+
+// Chat State
+const chatInput = ref('')
+const chatMessages = ref([])
+const chatMessagesContainer = ref(null)
+
+// Multiplayer State
+const isMultiplayer = ref(false)
+const roomPlayers = ref([])
+const playersInScene = computed(() => {
+  // Sincronizar la escena del jugador local en el array antes de filtrar
+  const localId = authStore.user?.id
+  return roomPlayers.value.filter(p => {
+    if (p.user_id === localId) return p.current_scene_id === currentRoomId.value
+    return p.current_scene_id === currentRoomId.value
+  })
+})
 const keypadMessage = ref('')
 const keypadSuccess = ref(false)
 const unlockedDoors = ref([]) // Guarda los IDs de puertas desbloqueadas
@@ -686,10 +781,173 @@ function closeExamineModal() {
   keypadMessage.value = ''
 }
 
+// ===== CHAT FUNCTIONS =====
+function sendChatMessage() {
+  if (!chatInput.value.trim() || !isMultiplayer.value) return
+
+  socketService.socket?.emit('chat:message', {
+    roomId: currentSessionId.value,
+    message: chatInput.value.trim()
+  })
+
+  chatInput.value = ''
+}
+
+function addSystemMessage(text) {
+  chatMessages.value.push({
+    type: 'system',
+    text,
+    timestamp: Date.now()
+  })
+  scrollChatToBottom()
+}
+
+function addChatMessage(userId, username, message, timestamp) {
+  chatMessages.value.push({
+    type: 'message',
+    userId,
+    username,
+    text: message,
+    timestamp
+  })
+
+  scrollChatToBottom()
+}
+
+function scrollChatToBottom() {
+  nextTick(() => {
+    if (chatMessagesContainer.value) {
+      chatMessagesContainer.value.scrollTop = chatMessagesContainer.value.scrollHeight
+    }
+  })
+}
+
+function formatTime(timestamp) {
+  const date = new Date(timestamp)
+  return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+}
+
+// ===== MULTIPLAYER FUNCTIONS =====
+async function setupMultiplayer() {
+  if (!currentSessionId.value) return
+
+  try {
+    // Verificar si es una partida multijugador
+    const response = await roomAPI.getRoomDetails(currentSessionId.value)
+    if (response.success && response.data.room) {
+      const room = response.data.room
+      isMultiplayer.value = room.max_players > 1
+
+      if (isMultiplayer.value) {
+        roomPlayers.value = room.players || []
+
+        // Conectar socket si no está conectado
+        const token = localStorage.getItem('backrooms_token')
+        if (token && !socketService.connected) {
+          socketService.connect(token)
+        }
+
+        // Unirse a la sala de socket
+        setTimeout(() => {
+          socketService.socket?.emit('room:join', { roomId: currentSessionId.value })
+        }, 500)
+
+        // Configurar listeners de Socket.io
+        setupSocketListeners()
+
+        // Reemplazar el slot vacío con la guía online
+        quickSlots.value[2] = {
+          icon: '🌐',
+          name: 'Guía Online',
+          description: '¡Bienvenido al modo online!\n\nEl panel izquierdo es el chat. Puedes hablar con las personas que están en el run contigo en tiempo real.\n\nEn la esquina superior del chat verás cuántas personas están en la misma escena que tú en este momento.'
+        }
+
+        // Mensaje de bienvenida
+        addSystemMessage('Te has unido a la partida multijugador')
+      }
+    }
+  } catch (error) {
+    console.error('Error al configurar multijugador:', error)
+    isMultiplayer.value = false
+  }
+}
+
+function setupSocketListeners() {
+  // Jugador se unió a la sala
+  socketService.socket?.on('room:playerJoined', (data) => {
+    console.log('Jugador se unió:', data)
+    addSystemMessage(`${data.username} se ha unido a la partida`)
+    refreshRoomPlayers()
+  })
+
+  // Jugador salió de la sala
+  socketService.socket?.on('room:playerLeft', (data) => {
+    console.log('Jugador salió:', data)
+    addSystemMessage(`${data.username} ha salido de la partida`)
+    refreshRoomPlayers()
+  })
+
+  // Jugador conectado (Socket.io)
+  socketService.socket?.on('room:playerConnected', (data) => {
+    console.log('Jugador conectado:', data)
+    addSystemMessage(`${data.username} se ha conectado`)
+  })
+
+  // Jugador desconectado (Socket.io)
+  socketService.socket?.on('room:playerDisconnected', (data) => {
+    console.log('Jugador desconectado:', data)
+    if (data.temporary) {
+      addSystemMessage(`${data.username} se ha desconectado temporalmente`)
+    } else {
+      addSystemMessage(`${data.username} se ha desconectado`)
+    }
+  })
+
+  // Mensaje de chat
+  socketService.socket?.on('chat:message', (data) => {
+    addChatMessage(data.userId, data.username, data.message, new Date(data.timestamp).getTime())
+  })
+
+  // Acción de jugador (cambio de escena, etc.)
+  socketService.socket?.on('player:action', (data) => {
+    console.log('Acción de jugador:', data)
+    // Aquí podrías manejar las acciones de otros jugadores
+    refreshRoomPlayers()
+  })
+
+  // Cambio de escena de jugador remoto
+  socketService.socket?.on('player:sceneChange', (data) => {
+    const playerIndex = roomPlayers.value.findIndex(p => p.user_id === data.userId)
+    if (playerIndex !== -1) {
+      // Reemplazar el objeto completo para que Vue detecte el cambio
+      roomPlayers.value.splice(playerIndex, 1, {
+        ...roomPlayers.value[playerIndex],
+        current_scene_id: data.sceneId
+      })
+    }
+  })
+}
+
+async function refreshRoomPlayers() {
+  if (!currentSessionId.value) return
+
+  try {
+    const response = await roomAPI.getRoomDetails(currentSessionId.value)
+    if (response.success && response.data.room) {
+      roomPlayers.value = response.data.room.players || []
+    }
+  } catch (error) {
+    console.error('Error al refrescar jugadores:', error)
+  }
+}
+
 // ===== PROGRESS SYSTEM =====
 onMounted(async () => {
   // Obtener ID de sesión del localStorage
   currentSessionId.value = localStorage.getItem('currentRoomId')
+
+  // Configurar multijugador si aplica
+  await setupMultiplayer()
 
   if (currentSessionId.value) {
     await loadGameProgress()
@@ -700,6 +958,24 @@ onMounted(async () => {
 watch(currentRoomId, async (newSceneId) => {
   if (currentSessionId.value && newSceneId) {
     await saveGameProgress()
+
+    if (isMultiplayer.value && socketService.socket) {
+      // Actualizar la escena del jugador local en el array local para el contador
+      const localId = authStore.user?.id
+      const playerIndex = roomPlayers.value.findIndex(p => p.user_id === localId)
+      if (playerIndex !== -1) {
+        roomPlayers.value.splice(playerIndex, 1, {
+          ...roomPlayers.value[playerIndex],
+          current_scene_id: newSceneId
+        })
+      }
+
+      // Emitir cambio de escena a otros jugadores
+      socketService.socket.emit('player:sceneChange', {
+        roomId: currentSessionId.value,
+        sceneId: newSceneId
+      })
+    }
   }
 })
 
@@ -709,6 +985,25 @@ watch(inventory, async () => {
     await saveGameProgress()
   }
 }, { deep: true })
+
+// Cleanup al desmontar componente
+onUnmounted(() => {
+  if (isMultiplayer.value && socketService.socket) {
+    // Remover todos los listeners específicos de GameView
+    socketService.socket.off('room:playerJoined')
+    socketService.socket.off('room:playerLeft')
+    socketService.socket.off('room:playerConnected')
+    socketService.socket.off('room:playerDisconnected')
+    socketService.socket.off('chat:message')
+    socketService.socket.off('player:action')
+    socketService.socket.off('player:sceneChange')
+
+    // Salir de la sala de socket
+    if (currentSessionId.value) {
+      socketService.socket.emit('room:leave', { roomId: currentSessionId.value })
+    }
+  }
+})
 
 // Cargar progreso guardado
 async function loadGameProgress() {
@@ -818,6 +1113,25 @@ async function saveGameProgress() {
 
 .dialogue-slide-leave-active {
   transition: all 0.2s ease-in;
+}
+
+/* Transición del chat (slide desde la izquierda) */
+.chat-slide-enter-active {
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.chat-slide-leave-active {
+  transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+}
+
+.chat-slide-enter-from {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.chat-slide-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
 }
 
 .dialogue-slide-enter-from {

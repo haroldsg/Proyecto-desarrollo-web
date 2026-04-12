@@ -128,6 +128,18 @@ const setupSocketHandlers = (io) => {
     })
 
     /**
+     * Cambio de escena del jugador
+     */
+    socket.on('player:sceneChange', ({ roomId, sceneId }) => {
+      console.log(`${socket.user.username} cambió a escena: ${sceneId}`)
+      socket.to(`room:${roomId}`).emit('player:sceneChange', {
+        userId: socket.user.id,
+        username: socket.user.username,
+        sceneId
+      })
+    })
+
+    /**
      * Desconexión
      */
     socket.on('disconnect', async () => {

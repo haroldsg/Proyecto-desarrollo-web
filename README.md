@@ -373,6 +373,53 @@ getPlayerInventory(sessionId, userId)             // Obtener items
 
 ---
 
+#### **FASE 5.2: Chat en Partida y Presencia de Jugadores**
+
+**1. Panel de Chat Integrado en GameView**
+- ✅ Chat siempre visible como panel izquierdo fijo (350px) en partidas multijugador
+- ✅ Layout de 3 columnas: Chat | Escena | Inventario
+- ✅ Mensajes del sistema para cuando un jugador entra o sale de la partida
+- ✅ Mensajes del sistema para conexiones/desconexiones de socket
+- ✅ Mensajes de usuarios con nombre y timestamp
+- ✅ Scroll automático al recibir nuevos mensajes
+- ✅ En partidas solo, el panel no aparece (layout de 2 columnas normal)
+
+**2. Contador de Jugadores por Escena**
+- ✅ Indicador en el header del chat mostrando cuántas personas están en la misma escena
+- ✅ Sincronización en tiempo real: al moverse, el contador se actualiza para todos
+- ✅ El jugador local también cuenta en el indicador de su escena actual
+- ✅ Reactividad corregida usando `splice` para que Vue detecte los cambios del array
+
+**3. Ingreso Directo a Partidas en Curso**
+- ✅ Jugadores pueden unirse a salas con status `playing` (antes solo `waiting`)
+- ✅ Al unirse a una sala en curso, se redirige directamente a `/game` en lugar del lobby de sala
+- ✅ Al unirse a una sala en espera, sigue yendo a `/room/:id` normalmente
+- ✅ Salas `finished` siguen siendo inaccesibles
+
+**4. Nuevos Eventos de Socket.io**
+```javascript
+'player:sceneChange'  // Emitido al cambiar de escena, broadcast a los demás jugadores
+```
+
+**5. Correcciones de Backend**
+```sql
+-- Campo agregado al SELECT de getRoomPlayers:
+rp.current_scene_id  -- Faltaba en la consulta, causaba que el contador siempre fuera 0
+```
+
+**6. Item Clave "Guía Online"**
+- ✅ Al entrar a una partida multijugador, el tercer slot de items clave se llena con la guía online
+- ✅ Explica el funcionamiento del chat y el contador de jugadores por escena
+
+**Flujo de presencia por escena:**
+1. Jugador se mueve a una nueva escena → se actualiza su entrada en `roomPlayers` localmente
+2. Se emite `player:sceneChange` al backend vía Socket.io
+3. El backend hace broadcast a todos los demás jugadores de la sala
+4. Cada cliente actualiza el array `roomPlayers` con `splice` (reactividad correcta)
+5. El computed `playersInScene` recalcula el contador automáticamente
+
+---
+
 ## 📚 Documentación
 
 Toda la documentación técnica está en la carpeta `docs/`:

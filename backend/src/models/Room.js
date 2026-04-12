@@ -96,6 +96,7 @@ export const getRoomPlayers = async (roomId) => {
        rp.id as player_id,
        rp.user_id,
        rp.is_host,
+       rp.current_scene_id,
        rp.joined_at,
        u.username,
        u.avatar_url
@@ -140,8 +141,9 @@ export const joinRoom = async (roomId, userId) => {
     throw new Error('La sala no existe')
   }
 
-  if (room.status !== 'waiting') {
-    throw new Error('La sala ya está en juego o ha terminado')
+  // Permitir unirse a salas en 'waiting' o 'playing', pero no a 'finished'
+  if (room.status === 'finished') {
+    throw new Error('La sala ya ha terminado')
   }
 
   const playerCount = await getPlayerCount(roomId)

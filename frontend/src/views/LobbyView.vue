@@ -302,7 +302,13 @@ async function handleJoinRoom(roomId) {
     if (response.success) {
       currentRoomId.value = roomId
       localStorage.setItem('currentRoomId', roomId)
-      router.push(`/room/${roomId}`)
+
+      // Si la partida ya está en curso, ir directo al juego
+      if (response.data.room.status === 'playing') {
+        router.push('/game')
+      } else {
+        router.push(`/room/${roomId}`)
+      }
     }
   } catch (err) {
     alert(err.message || 'Error al unirse a la sala')
@@ -319,7 +325,13 @@ async function handleJoinByCode() {
       showJoinCodeModal.value = false
       currentRoomId.value = response.data.room.id
       localStorage.setItem('currentRoomId', response.data.room.id)
-      router.push(`/room/${response.data.room.id}`)
+
+      // Si la partida ya está en curso, ir directo al juego
+      if (response.data.room.status === 'playing') {
+        router.push('/game')
+      } else {
+        router.push(`/room/${response.data.room.id}`)
+      }
     }
   } catch (err) {
     joinCodeError.value = err.message || 'Error al unirse con código'
