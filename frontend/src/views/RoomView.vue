@@ -14,8 +14,8 @@
       <!-- Room Header -->
       <div class="flex flex-col lg:flex-row justify-between items-center mb-8 p-5 bg-backrooms-dark-light/60 border-2 border-backrooms-yellow/20 rounded-xl gap-4">
         <div class="w-full lg:w-auto">
-          <h1 class="text-3xl lg:text-4xl text-backrooms-yellow mb-2 shadow-[0_0_20px_rgba(255,220,100,0.3)]">
-            🚪 {{ roomData.name }}
+          <h1 class="text-3xl lg:text-4xl text-backrooms-yellow mb-2">
+            {{ roomData.name }}
           </h1>
           <div class="flex items-center gap-2 text-[#999] text-sm">
             <span>Código:</span>
@@ -91,7 +91,7 @@
                 'bg-[#646464]/30': !canStartGame
               }"
             >
-              {{ canStartGame ? '🎮 Iniciar Juego' : '⏳ Esperando jugadores...' }}
+              {{ canStartGame ? 'Iniciar Juego' : 'Esperando jugadores...' }}
             </button>
             <p v-if="!canStartGame" class="text-center text-[#999] text-sm mt-2.5">
               Se necesitan al menos 2 jugadores para iniciar
@@ -125,7 +125,6 @@
 
             <div v-if="messages.length === 0" class="text-center py-10 px-5 text-[#666]">
               <p>No hay mensajes aún</p>
-              <p class="text-sm mt-2">¡Sé el primero en escribir!</p>
             </div>
           </div>
 

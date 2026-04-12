@@ -128,55 +128,66 @@
         </div>
 
         <!-- Bottom: Movement/Action Buttons -->
-        <div class="border-t-2 border-backrooms-yellow/20 bg-black/60 p-6">
-          <div class="max-w-2xl mx-auto">
+        <div class="border-t-2 border-backrooms-yellow/20 bg-black/60 py-4 px-6">
+          <div class="flex items-center justify-center gap-6">
 
-            <!-- Controles en forma de flechas de teclado -->
-            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto">
-              <!-- Fila 1: Avanzar (centro) + Examinar (derecha) -->
+            <!-- Cruceta de movimiento -->
+            <div class="grid grid-cols-3 grid-rows-2 gap-2 w-56">
+              <!-- Fila 1: vacío + Avanzar + vacío -->
               <div></div>
               <button
                 v-if="getActionByDirection('forward')"
                 @click="performAction(getActionByDirection('forward'))"
-                class="px-4 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/40 rounded-lg text-backrooms-yellow font-semibold text-sm transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(255,220,100,0.3)]"
+                class="flex flex-col items-center justify-center gap-0.5 h-12 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-xl text-backrooms-yellow transition-all duration-200 hover:bg-backrooms-yellow/25 hover:border-backrooms-yellow/70 hover:scale-105 active:scale-95"
               >
-                ⬆️ Avanzar
+                <span class="text-lg leading-none">▲</span>
+                <span class="text-[10px] font-mono uppercase tracking-wide opacity-70">Adelt</span>
               </button>
               <div v-else></div>
-              <button
-                v-if="getExamineAction()"
-                @click="performAction(getExamineAction())"
-                class="px-4 py-3 bg-blue-500/20 border border-blue-400/40 rounded-lg text-blue-300 font-semibold text-sm transition-all duration-300 hover:bg-blue-500/30 hover:border-blue-400"
-              >
-                🔍 Examinar
-              </button>
+              <div></div>
 
               <!-- Fila 2: Izquierda + Retroceder + Derecha -->
               <button
                 v-if="getActionByDirection('left')"
                 @click="performAction(getActionByDirection('left'))"
-                class="px-4 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/40 rounded-lg text-backrooms-yellow font-semibold text-sm transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(255,220,100,0.3)]"
+                class="flex flex-col items-center justify-center gap-0.5 h-12 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-xl text-backrooms-yellow transition-all duration-200 hover:bg-backrooms-yellow/25 hover:border-backrooms-yellow/70 hover:scale-105 active:scale-95"
               >
-                ⬅️ Izquierda
+                <span class="text-lg leading-none">◀</span>
+                <span class="text-[10px] font-mono uppercase tracking-wide opacity-70">Izq</span>
               </button>
               <div v-else></div>
               <button
                 v-if="getActionByDirection('backward')"
                 @click="performAction(getActionByDirection('backward'))"
-                class="px-4 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/40 rounded-lg text-backrooms-yellow font-semibold text-sm transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(255,220,100,0.3)]"
+                class="flex flex-col items-center justify-center gap-0.5 h-12 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-xl text-backrooms-yellow transition-all duration-200 hover:bg-backrooms-yellow/25 hover:border-backrooms-yellow/70 hover:scale-105 active:scale-95"
               >
-                ⬇️ Retroceder
+                <span class="text-lg leading-none">▼</span>
+                <span class="text-[10px] font-mono uppercase tracking-wide opacity-70">Atrás</span>
               </button>
               <div v-else></div>
               <button
                 v-if="getActionByDirection('right')"
                 @click="performAction(getActionByDirection('right'))"
-                class="px-4 py-3 bg-backrooms-yellow/10 border border-backrooms-yellow/40 rounded-lg text-backrooms-yellow font-semibold text-sm transition-all duration-300 hover:bg-backrooms-yellow/20 hover:border-backrooms-yellow hover:-translate-y-1 hover:shadow-[0_4px_12px_rgba(255,220,100,0.3)]"
+                class="flex flex-col items-center justify-center gap-0.5 h-12 bg-backrooms-yellow/10 border border-backrooms-yellow/30 rounded-xl text-backrooms-yellow transition-all duration-200 hover:bg-backrooms-yellow/25 hover:border-backrooms-yellow/70 hover:scale-105 active:scale-95"
               >
-                ➡️ Derecha
+                <span class="text-lg leading-none">▶</span>
+                <span class="text-[10px] font-mono uppercase tracking-wide opacity-70">Der</span>
               </button>
               <div v-else></div>
             </div>
+
+            <!-- Separador vertical -->
+            <div class="h-16 w-px bg-backrooms-yellow/15"></div>
+
+            <!-- Botón Examinar aparte -->
+            <button
+              v-if="getExamineAction()"
+              @click="performAction(getExamineAction())"
+              class="flex flex-col items-center justify-center gap-1 w-24 h-16 bg-blue-500/10 border border-blue-400/30 rounded-2xl text-blue-300 transition-all duration-200 hover:bg-blue-500/25 hover:border-blue-400/70 hover:scale-105 active:scale-95"
+            >
+              <span class="text-xl leading-none">🔍</span>
+              <span class="text-[10px] font-mono uppercase tracking-wide opacity-70">Examinar</span>
+            </button>
           </div>
         </div>
       </div>
@@ -262,7 +273,7 @@
 
             <!-- Panel numérico si existe -->
             <div v-if="currentRoom.keypad && !isKeypadUnlocked" class="pt-2">
-              <p class="text-backrooms-yellow text-sm mb-3">🔢 {{ currentRoom.keypad.hint }}</p>
+              <p class="text-backrooms-yellow text-sm mb-3">{{ currentRoom.keypad.hint }}</p>
 
               <div class="flex gap-2">
                 <input
@@ -423,6 +434,45 @@
       </div>
     </Transition>
 
+    <!-- ===== ENDING CINEMATIC ===== -->
+    <Transition name="ending-fade">
+      <div
+        v-if="showEnding"
+        class="fixed inset-0 bg-black z-[100] flex flex-col items-center justify-center cursor-pointer"
+        @click="nextEndingSlide"
+      >
+        <Transition name="ending-text" mode="out-in">
+          <div
+            :key="endingSlideIndex"
+            class="max-w-2xl px-8 text-center"
+          >
+            <p
+              class="text-white font-mono leading-relaxed whitespace-pre-line"
+              :class="endingSlides[endingSlideIndex] === 'CONTINUARÁ...'
+                ? 'text-4xl font-bold tracking-widest text-backrooms-yellow'
+                : 'text-xl'"
+            >
+              {{ endingSlides[endingSlideIndex] }}
+            </p>
+          </div>
+        </Transition>
+
+        <!-- Indicador de continuar -->
+        <p
+          v-if="endingSlides[endingSlideIndex] !== 'CONTINUARÁ...'"
+          class="absolute bottom-10 text-white/30 text-sm font-mono animate-pulse"
+        >
+          Haz clic para continuar...
+        </p>
+        <p
+          v-else
+          class="absolute bottom-10 text-backrooms-yellow/60 text-sm font-mono animate-pulse"
+        >
+          Haz clic para volver al menú
+        </p>
+      </div>
+    </Transition>
+
   </div>
 </template>
 
@@ -453,6 +503,28 @@ const selectedKeyItem = ref(null)
 
 // Keypad State
 const keypadInput = ref('')
+
+// Ending Cinematic State
+const showEnding = ref(false)
+const endingSlideIndex = ref(0)
+
+const endingSlidesSolo = [
+  'Con las pistas que encontraste pudiste ingresar al laboratorio viejo.',
+  'Hay sangre por todos lados y personas muertas...\n\nIntentas investigar qué pasó aquí.',
+  'Pero...',
+  'Un hoyo negro se creó debajo de ti y te trasladó a un nivel no antes visto...',
+  'CONTINUARÁ...'
+]
+
+const endingSlideMulti = [
+  'Con las pistas que encontraron tú y tus compañeros pudieron ingresar al laboratorio viejo.',
+  'Hay sangre por todos lados y personas muertas...\n\nIntentan investigar qué pasó aquí.',
+  'Pero...',
+  'Un hoyo negro se creó debajo de todos los que estaban ahí y los trasladó a un nivel no antes visto...',
+  'CONTINUARÁ...'
+]
+
+const endingSlides = computed(() => isMultiplayer.value ? endingSlideMulti : endingSlidesSolo)
 
 // Chat State
 const chatInput = ref('')
@@ -549,6 +621,12 @@ function transitionToNewRoom(direction) {
 
   if (!nextRoomId) {
     console.log('No hay salida en esa dirección')
+    return
+  }
+
+  // Interceptar final del juego
+  if (nextRoomId === '__ending__') {
+    startEnding()
     return
   }
 
@@ -750,13 +828,18 @@ function submitKeypadCode() {
     keypadSuccess.value = true
     keypadMessage.value = '✓ Acceso concedido. La puerta se ha desbloqueado.'
 
-    // Esperar a que el usuario vea el mensaje antes de desbloquear
+    // Esperar a que el usuario vea el mensaje, luego navegar a la puerta abierta
     setTimeout(() => {
-      unlockedDoors.value.push(currentRoomId.value)
       keypadMessage.value = ''
       keypadInput.value = ''
       showExamineModal.value = false
-    }, 2000)
+      // Navegar directamente a la escena de puerta abierta
+      if (room.keypad.opensTo) {
+        currentRoomId.value = room.keypad.opensTo
+      } else {
+        unlockedDoors.value.push(currentRoomId.value)
+      }
+    }, 800)
   } else {
     // Código incorrecto
     keypadSuccess.value = false
@@ -779,6 +862,40 @@ function closeExamineModal() {
   showExamineModal.value = false
   keypadInput.value = ''
   keypadMessage.value = ''
+}
+
+// ===== ENDING CINEMATIC =====
+function startEnding() {
+  endingSlideIndex.value = 0
+  showEnding.value = true
+
+  // Notificar a todos los demás en el momento que empieza, no al terminar
+  if (isMultiplayer.value && currentSessionId.value && socketService.socket) {
+    socketService.socket.emit('room:gameFinished', { roomId: currentSessionId.value })
+  }
+}
+
+async function nextEndingSlide() {
+  if (endingSlideIndex.value < endingSlides.value.length - 1) {
+    endingSlideIndex.value++
+  } else {
+    await finishGame()
+  }
+}
+
+async function finishGame() {
+  try {
+    if (isMultiplayer.value && currentSessionId.value) {
+      await roomAPI.leaveRoom(currentSessionId.value)
+    }
+  } catch (e) {
+    // ignorar errores al terminar
+  } finally {
+    localStorage.removeItem('currentRoomId')
+    localStorage.removeItem('isSoloGame')
+    showEnding.value = false
+    router.push('/game-mode')
+  }
 }
 
 // ===== CHAT FUNCTIONS =====
@@ -915,6 +1032,12 @@ function setupSocketListeners() {
     refreshRoomPlayers()
   })
 
+  // Fin de partida — solo arrancar cinemática sin re-emitir el socket
+  socketService.socket?.on('room:gameFinished', () => {
+    endingSlideIndex.value = 0
+    showEnding.value = true
+  })
+
   // Cambio de escena de jugador remoto
   socketService.socket?.on('player:sceneChange', (data) => {
     const playerIndex = roomPlayers.value.findIndex(p => p.user_id === data.userId)
@@ -997,6 +1120,7 @@ onUnmounted(() => {
     socketService.socket.off('chat:message')
     socketService.socket.off('player:action')
     socketService.socket.off('player:sceneChange')
+    socketService.socket.off('room:gameFinished')
 
     // Salir de la sala de socket
     if (currentSessionId.value) {
@@ -1142,5 +1266,29 @@ async function saveGameProgress() {
 .dialogue-slide-leave-to {
   opacity: 0;
   transform: translateY(30px);
+}
+
+/* Ending cinematic */
+.ending-fade-enter-active,
+.ending-fade-leave-active {
+  transition: opacity 1s ease;
+}
+.ending-fade-enter-from,
+.ending-fade-leave-to {
+  opacity: 0;
+}
+
+.ending-text-enter-active {
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.ending-text-leave-active {
+  transition: opacity 0.4s ease;
+}
+.ending-text-enter-from {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.ending-text-leave-to {
+  opacity: 0;
 }
 </style>

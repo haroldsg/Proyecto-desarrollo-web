@@ -56,7 +56,7 @@ export const roomsMap = {
     image: '/images/rooms/bloqIzqSup/1.png',
     description: 'Un infinito pasillo de paredes amarillas y luces fluorescentes parpadeantes. El zumbido constante te perfora los oídos.',
     connections: {
-      forward: 'pasillo-5',
+      forward: 'puerta-laboratorio-cerrado',
       right: 'pasillo-7',
       left: null,
       backward: 'pasillo-3'
@@ -64,13 +64,13 @@ export const roomsMap = {
     items: []
   },
 
-  'pasillo-5': {
-    id: 'pasillo-5',
-    name: 'Pasillo',
+  'puerta-laboratorio-cerrado': {
+    id: 'puerta-laboratorio-cerrado',
+    name: 'Puerta de laboratorio',
     image: '/images/rooms/bloqIzqSup/Up1.png',
     description: 'Una pesada puerta de seguridad industrial bloquea el final del pasillo, rayas azules diagonales en la parte inferior y un panel numérico a la derecha.',
     connections: {
-      forward: 'pasillo-6',
+      forward: 'panel-numerico',
       right: null,
       left: null,
       backward: 'pasillo-4'
@@ -78,22 +78,37 @@ export const roomsMap = {
     items: []
   },
 
-  'pasillo-6': {
-    id: 'pasillo-6',
-    name: 'Pasillo',
+  'puerta-laboratorio-abierta': {
+    id: 'puerta-laboratorio-abierta',
+    name: 'Laboratorio — Entrada',
+    image: '/images/rooms/bloqIzqSup/puerta-laboratorio-abierta.jpg',
+    description: '¿Qué rayos?',
+    connections: {
+      forward: '__ending__',
+      right: null,
+      left: null,
+      backward: null
+    },
+    items: []
+  },
+
+  'panel-numerico': {
+    id: 'panel-numerico',
+    name: 'Panel numérico',
     image: '/images/rooms/bloqIzqSup/Up2.png',
     description: '',
     connections: {
       forward: null,
       right: null,
       left: null,
-      backward: 'pasillo-5'
+      backward: 'puerta-laboratorio-cerrado'
     },
     items: [],
     // Panel numérico - requiere código para avanzar
     keypad: {
       code: '1758',
       unlocks: 'forward',
+      opensTo: 'puerta-laboratorio-abierta',
       hint: 'Teclea el código de acceso...'
     }
   },

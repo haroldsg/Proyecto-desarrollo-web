@@ -420,6 +420,40 @@ rp.current_scene_id  -- Faltaba en la consulta, causaba que el contador siempre 
 
 ---
 
+#### **FASE 5.3: Final del Juego y Rediseño de Controles**
+
+**1. Cinemática Final**
+- ✅ Al avanzar desde `puerta-laboratorio-abierta`, se dispara una secuencia cinemática de fondo negro
+- ✅ 5 slides con animación de fade + slide-up entre cada uno, avanzados con clic
+- ✅ Texto diferenciado para modo solo y modo multijugador
+- ✅ Último slide muestra "CONTINUARÁ..." en amarillo y tamaño grande
+- ✅ Al terminar, limpia la sesión (localStorage) y redirige a `/game-mode`
+
+**2. Sincronización de Final en Multijugador**
+- ✅ Al entrar al final, se emite `room:gameFinished` vía Socket.io de forma inmediata
+- ✅ Todos los jugadores de la sala ven la cinemática simultáneamente
+- ✅ El jugador que disparó el evento sale de la sala en el backend al terminar los slides
+- ✅ Los demás clientes arrancan la cinemática localmente sin re-emitir el socket (evita loop)
+
+**3. Flujo de la Puerta del Laboratorio**
+- ✅ Al ingresar el código correcto en `panel-numerico`, navega automáticamente a `puerta-laboratorio-abierta` (800ms de espera)
+- ✅ La conexión `forward` de `puerta-laboratorio-abierta` apunta a `__ending__`, un identificador especial interceptado en `transitionToNewRoom()`
+- ✅ El campo `opensTo` en el keypad del mapa permite definir a qué escena navegar al acertar el código
+
+**4. Nuevos Eventos de Socket.io**
+```javascript
+'room:gameFinished'  // Emitido al iniciar la cinemática final, broadcast a toda la sala
+```
+
+**5. Rediseño de Controles de Movimiento**
+- ✅ Cruceta estilo gamepad en lugar de botones de texto
+- ✅ Flechas ▲ ▼ ◀ ▶ con etiqueta pequeña debajo
+- ✅ Botón Examinar separado visualmente con un divisor vertical
+- ✅ Animación `hover:scale-105` y `active:scale-95` para feedback táctil
+- ✅ Diseño más compacto y limpio sin emojis de flecha
+
+---
+
 ## 📚 Documentación
 
 Toda la documentación técnica está en la carpeta `docs/`:

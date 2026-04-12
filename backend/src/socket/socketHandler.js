@@ -128,6 +128,17 @@ const setupSocketHandlers = (io) => {
     })
 
     /**
+     * Fin de partida (jugador llegó al final)
+     */
+    socket.on('room:gameFinished', ({ roomId }) => {
+      console.log(`Partida ${roomId} finalizada por ${socket.user.username}`)
+      io.to(`room:${roomId}`).emit('room:gameFinished', {
+        roomId,
+        finishedBy: socket.user.username
+      })
+    })
+
+    /**
      * Cambio de escena del jugador
      */
     socket.on('player:sceneChange', ({ roomId, sceneId }) => {
