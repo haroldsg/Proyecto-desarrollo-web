@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"c:\\\\Users\\\\Usuario\\\\Desktop\\\\Proyecto desarrollo web\\\\backrooms\\\\backend\\\\database\\\\migrate.sql\")",
+      "Bash(node src/server.js)"
+    ]
+  }
+}

@@ -454,6 +454,152 @@ rp.current_scene_id  -- Faltaba en la consulta, causaba que el contador siempre 
 
 ---
 
+### ✅ FASE 6: Sistema Social y Chat Global
+
+#### **FASE 6.1: Chat Global en Tiempo Real**
+
+**1. Chat Global con Socket.io**
+- ✅ Mensajes guardados en base de datos (tabla `messages`, `receiver_id = NULL`)
+- ✅ Historial de los últimos 50 mensajes cargado al abrir la vista
+- ✅ Broadcast en tiempo real a todos los usuarios conectados
+- ✅ Burbujas diferenciadas: mensajes propios (derecha) vs ajenos (izquierda)
+- ✅ Timestamps relativos ("Ahora", "Hace 5m", "Hace 2h")
+- ✅ Sin mensajes de sistema por conexión/desconexión (solo actualización silenciosa de la lista)
+
+**2. Lista de Usuarios En Línea**
+- ✅ Presencia en tiempo real mediante `Map` en memoria del servidor (volátil, sin DB)
+- ✅ Al abrir el chat, se solicita la lista actualizada (`global:requestOnlineList`)
+- ✅ Actualizaciones automáticas al conectarse/desconectarse usuarios
+- ✅ El usuario propio se excluye de la lista
+
+---
+
+#### **FASE 6.2: Sistema de Amigos**
+
+**1. Solicitudes de Amistad**
+- ✅ Buscar usuario por nombre exacto y enviar solicitud via REST API
+- ✅ Enviar solicitud directamente desde la lista de usuarios en línea (botón ➕)
+- ✅ Indicador "Enviada ✓" al pulsar ➕ (sin necesidad de recargar)
+- ✅ Notificación en tiempo real al receptor via Socket.io
+- ✅ Tab de "Solicitudes" con badge contador de solicitudes pendientes
+- ✅ Aceptar/rechazar solicitudes desde la interfaz
+
+**2. Lista de Amigos**
+- ✅ Amigos ordenados con indicador de estado en línea/desconectado
+- ✅ Botón para eliminar amigo con confirmación
+
+**3. Chat Privado**
+- ✅ Mensajes privados guardados en DB (`receiver_id != NULL`)
+- ✅ Historial de conversación cargado al abrir el chat privado
+- ✅ Entrega en tiempo real vía Socket.io (al receptor y echo al remitente)
+- ✅ Routing correcto del chat: clave por `userId` del interlocutor (`chatKey`)
+- ✅ Cambio de contexto: "← Volver al global" para regresar al chat global
+
+---
+
+#### **FASE 6.3: Mejoras al Sistema de Salas**
+
+**1. Salas Privadas Solo Visibles para el Host**
+- ✅ Las salas privadas ya NO aparecen en el lobby para otros jugadores
+- ✅ El host sí ve sus propias salas privadas en el lobby (con ícono 🔒)
+- ✅ Otros jugadores pueden unirse únicamente con el código de 6 caracteres
+- ✅ Texto del modal aclarado: "Solo tú la verás en el lobby. Comparte el código para que otros se unan"
+
+**2. Priorización de Sala Propia**
+- ✅ La sala creada por el usuario siempre aparece primera en el lobby
+- ✅ Ordenamiento en base de datos: `CASE WHEN host_id = userId THEN 0 ELSE 1 END`
+
+---
+
+#### **Cambios de Base de Datos (FASE 6)**
+
+```sql
+-- Tabla messages rediseñada:
+-- receiver_id = NULL  → mensaje global
+-- receiver_id != NULL → mensaje privado entre sender y receiver
+CREATE TABLE messages (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  sender_id   INT NOT NULL,
+  receiver_id INT NULL DEFAULT NULL,
+  message_text TEXT NOT NULL,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Tabla friends (nueva):
+CREATE TABLE friends (
+  id        INT AUTO_INCREMENT PRIMARY KEY,
+  user_id   INT NOT NULL,
+  friend_id INT NOT NULL,
+  status    ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_friendship (user_id, friend_id)
+);
+
+-- Tablas eliminadas: game_progress, user_mutes (no utilizadas)
+```
+
+#### **Nuevos Endpoints REST**
+
+```bash
+GET    /api/social/messages/global           # Historial chat global (últimos 50)
+GET    /api/social/messages/private/:friendId # Historial chat privado
+GET    /api/social/friends                   # Lista de amigos
+GET    /api/social/friends/requests          # Solicitudes pendientes recibidas
+POST   /api/social/friends/request           # Enviar solicitud por username
+POST   /api/social/friends/accept/:requestId # Aceptar solicitud
+DELETE /api/social/friends/reject/:requestId # Rechazar solicitud
+DELETE /api/social/friends/:friendId         # Eliminar amigo
+```
+
+#### **Nuevos Eventos Socket.io**
+
+```javascript
+// Chat global
+'global:message'          // Enviar/recibir mensaje global
+'global:onlineList'       // Lista completa de usuarios en línea
+'global:requestOnlineList'// Solicitar lista actualizada
+'global:userOnline'       // Un usuario se conectó
+'global:userOffline'      // Un usuario se desconectó
+
+// Chat privado
+'private:message'         // Enviar/recibir mensaje privado (incluye fromUserId y receiverId)
+
+// Amigos
+'friend:request'          // Solicitud de amistad recibida
+'friend:requestAccepted'  // Solicitud de amistad aceptada
+'friend:error'            // Error en operación de amistad
+```
+
+#### **Archivos Creados/Modificados**
+
+```
+backend/
+├── src/
+│   ├── models/
+│   │   └── Social.js              # Modelo: mensajes, amigos, solicitudes
+│   ├── controllers/
+│   │   └── socialController.js    # Controladores REST del sistema social
+│   ├── routes/
+│   │   └── socialRoutes.js        # Rutas /api/social/*
+│   └── socket/
+│       └── socketHandler.js       # Eventos global:*, private:*, friend:*
+├── database/
+│   └── schema.sql                 # Actualizado: tabla messages rediseñada + tabla friends
+
+frontend/
+├── src/
+│   ├── views/
+│   │   └── ChatGlobalView.vue     # Vista completa: chat global, amigos, privados, solicitudes
+│   └── services/
+│       └── api.js                 # socialAPI añadida
+```
+
+---
+
 ## 📚 Documentación
 
 Toda la documentación técnica está en la carpeta `docs/`:

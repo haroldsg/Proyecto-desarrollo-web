@@ -63,8 +63,10 @@ export const getRoomByCode = async (roomCode) => {
   return rooms[0] || null
 }
 
-// Obtener todas las salas disponibles (en espera y con espacio) - SOLO PÚBLICAS
-export const getAvailableRooms = async () => {
+// Obtener todas las salas disponibles:
+// - Salas públicas en espera con espacio
+// - Salas privadas donde el usuario es host
+export const getAvailableRooms = async (userId) => {
   const [rooms] = await pool.execute(
     `SELECT
        gs.id,
@@ -81,10 +83,17 @@ export const getAvailableRooms = async () => {
      FROM game_sessions gs
      JOIN users u ON gs.host_id = u.id
      LEFT JOIN room_players rp ON gs.id = rp.session_id
-     WHERE gs.status = 'waiting' AND gs.is_public = TRUE
+     WHERE gs.status = 'waiting'
+       AND (
+         gs.is_public = TRUE
+         OR (gs.is_public = FALSE AND gs.host_id = ?)
+       )
      GROUP BY gs.id
      HAVING current_players < gs.max_players
-     ORDER BY gs.created_at DESC`
+     ORDER BY
+       CASE WHEN gs.host_id = ? THEN 0 ELSE 1 END ASC,
+       gs.created_at DESC`,
+    [userId, userId]
   )
   return rooms
 }

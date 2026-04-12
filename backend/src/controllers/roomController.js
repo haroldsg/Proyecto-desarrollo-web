@@ -48,7 +48,7 @@ export const createRoom = async (req, res) => {
 // Obtener todas las salas disponibles
 export const getAvailableRooms = async (req, res) => {
   try {
-    const rooms = await Room.getAvailableRooms()
+    const rooms = await Room.getAvailableRooms(req.user.id)
 
     res.json({
       success: true,

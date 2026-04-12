@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import Room from '../models/Room.js'
+import Social from '../models/Social.js'
 
 /**
  * Middleware de autenticación para Socket.io
@@ -27,11 +28,41 @@ const setupSocketHandlers = (io) => {
   // Aplicar middleware de autenticación
   io.use(authenticateSocket)
 
+  // Mapa de usuarios online: userId -> { username, socketId }
+  const onlineUsers = new Map()
+
   io.on('connection', (socket) => {
     console.log(`Usuario conectado: ${socket.user.username} (ID: ${socket.user.id})`)
 
+    // Registrar usuario online
+    onlineUsers.set(socket.user.id, { username: socket.user.username, socketId: socket.id })
+
+    // Notificar a todos que este usuario se conectó
+    socket.broadcast.emit('global:userOnline', {
+      userId: socket.user.id,
+      username: socket.user.username
+    })
+
+    // Enviar lista de usuarios online al recién conectado
+    const onlineList = Array.from(onlineUsers.entries()).map(([id, data]) => ({
+      userId: id,
+      username: data.username
+    }))
+    socket.emit('global:onlineList', onlineList)
+
     // Unirse a sala de socket personal (para notificaciones)
     socket.join(`user:${socket.user.id}`)
+
+    /**
+     * Pedir lista de usuarios online (cuando se abre el chat global)
+     */
+    socket.on('global:requestOnlineList', () => {
+      const list = Array.from(onlineUsers.entries()).map(([id, data]) => ({
+        userId: id,
+        username: data.username
+      }))
+      socket.emit('global:onlineList', list)
+    })
 
     /**
      * Unirse a una sala de juego (para recibir eventos)
@@ -151,10 +182,78 @@ const setupSocketHandlers = (io) => {
     })
 
     /**
+     * Chat global — guardar en DB y broadcast a todos
+     */
+    socket.on('global:message', async ({ message }) => {
+      if (!message || !message.trim()) return
+      try {
+        const msgId = await Social.saveGlobalMessage(socket.user.id, message.trim())
+        io.emit('global:message', {
+          id: msgId,
+          userId: socket.user.id,
+          username: socket.user.username,
+          text: message.trim(),
+          timestamp: new Date().toISOString()
+        })
+      } catch (error) {
+        console.error('Error en mensaje global:', error)
+      }
+    })
+
+    /**
+     * Mensaje privado — solo va al destinatario y al remitente
+     */
+    socket.on('private:message', async ({ receiverId, message }) => {
+      if (!message || !message.trim()) return
+      try {
+        const msgId = await Social.savePrivateMessage(socket.user.id, receiverId, message.trim())
+        const payload = {
+          id: msgId,
+          userId: socket.user.id,
+          username: socket.user.username,
+          text: message.trim(),
+          timestamp: new Date().toISOString(),
+          fromUserId: socket.user.id,
+          receiverId
+        }
+        // Al destinatario
+        io.to(`user:${receiverId}`).emit('private:message', payload)
+        // Echo al remitente
+        socket.emit('private:message', payload)
+      } catch (error) {
+        console.error('Error en mensaje privado:', error)
+      }
+    })
+
+    /**
+     * Solicitud de amistad vía socket
+     */
+    socket.on('friend:request', async ({ targetUserId }) => {
+      try {
+        await Social.sendFriendRequest(socket.user.id, targetUserId)
+        // Obtener el request recién creado para tener el request_id real
+        const requests = await Social.getPendingRequests(targetUserId)
+        const newReq = requests.find(r => r.id === socket.user.id)
+        io.to(`user:${targetUserId}`).emit('friend:request', {
+          request_id: newReq?.request_id,
+          id: socket.user.id,
+          username: socket.user.username,
+          created_at: new Date().toISOString()
+        })
+      } catch (error) {
+        socket.emit('friend:error', { message: error.message })
+      }
+    })
+
+    /**
      * Desconexión
      */
     socket.on('disconnect', async () => {
       console.log(`Usuario desconectado: ${socket.user.username}`)
+
+      // Quitar de online y notificar
+      onlineUsers.delete(socket.user.id)
+      io.emit('global:userOffline', { userId: socket.user.id })
 
       // Verificar si estaba en una sala activa
       try {
@@ -163,7 +262,7 @@ const setupSocketHandlers = (io) => {
           io.to(`room:${currentRoom.id}`).emit('room:playerDisconnected', {
             userId: socket.user.id,
             username: socket.user.username,
-            temporary: true // Puede reconectarse
+            temporary: true
           })
         }
       } catch (error) {

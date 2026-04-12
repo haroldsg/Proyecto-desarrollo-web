@@ -45,7 +45,10 @@
               : 'border-backrooms-yellow/20 hover:border-backrooms-yellow/50 hover:shadow-[0_8px_24px_rgba(255,220,100,0.1)]'"
           >
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-backrooms-yellow text-xl">{{ room.room_name }}</h3>
+              <h3 class="text-backrooms-yellow text-xl flex items-center gap-2">
+                {{ room.room_name }}
+                <span v-if="!room.is_public" title="Sala privada" class="text-purple-400 text-base">🔒</span>
+              </h3>
               <span class="bg-backrooms-yellow text-backrooms-dark px-2.5 py-1 rounded-md font-mono font-bold text-sm">
                 {{ room.room_code }}
               </span>
@@ -162,7 +165,7 @@
               </label>
             </div>
             <p class="text-gray-400 text-xs mt-2">
-              {{ newRoom.isPublic ? 'Visible en el lobby para todos' : 'Solo accesible con código' }}
+              {{ newRoom.isPublic ? 'Visible en el lobby para todos' : 'Solo tú la verás en el lobby. Comparte el código para que otros se unan' }}
             </p>
           </div>
 

@@ -6,6 +6,7 @@ import { Server } from 'socket.io'
 import { testConnection } from './config/database.js'
 import authRoutes from './routes/authRoutes.js'
 import roomRoutes from './routes/roomRoutes.js'
+import socialRoutes from './routes/socialRoutes.js'
 import setupSocketHandlers from './socket/socketHandler.js'
 
 // Cargar variables de entorno
@@ -65,6 +66,7 @@ app.get('/health', async (req, res) => {
 // ========================================
 app.use('/api/auth', authRoutes)
 app.use('/api/rooms', roomRoutes)
+app.use('/api/social', socialRoutes)
 
 // Iniciar servidor
 httpServer.listen(PORT, async () => {

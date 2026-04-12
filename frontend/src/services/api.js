@@ -86,4 +86,35 @@ export const roomAPI = {
     api.get(`/api/rooms/${sessionId}/progress/load`)
 }
 
+// ========================================
+// SOCIAL ENDPOINTS
+// ========================================
+export const socialAPI = {
+  // Mensajes
+  getGlobalMessages: () =>
+    api.get('/api/social/messages/global'),
+
+  getPrivateHistory: (friendId) =>
+    api.get(`/api/social/messages/private/${friendId}`),
+
+  // Amigos
+  getFriends: () =>
+    api.get('/api/social/friends'),
+
+  getPendingRequests: () =>
+    api.get('/api/social/friends/requests'),
+
+  sendFriendRequest: (username) =>
+    api.post('/api/social/friends/request', { username }),
+
+  acceptFriendRequest: (requestId, senderId) =>
+    api.post(`/api/social/friends/accept/${requestId}`, { senderId }),
+
+  rejectFriendRequest: (requestId) =>
+    api.delete(`/api/social/friends/reject/${requestId}`),
+
+  removeFriend: (friendId) =>
+    api.delete(`/api/social/friends/${friendId}`)
+}
+
 export default api
