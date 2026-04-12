@@ -12,7 +12,7 @@
             @click="showJoinCodeModal = true"
             class="flex items-center gap-2 px-6 py-3 bg-blue-600/20 border-2 border-blue-400/40 rounded-lg text-blue-300 text-base font-bold cursor-pointer transition-all duration-300 hover:bg-blue-600/30 hover:border-blue-400/60 hover:-translate-y-0.5"
           >
-            <span>🔑</span> Unirse con Código
+            Unirse con Código
           </button>
           <button
             @click="showCreateModal = true"

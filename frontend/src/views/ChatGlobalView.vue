@@ -4,10 +4,11 @@
 
     <div class="max-w-[1600px] mx-auto px-5 py-5">
       <!-- Header -->
+       <!--
       <div class="mb-5 p-5 bg-backrooms-dark-light/60 border-2 border-backrooms-yellow/20 rounded-xl">
         <h1 class="text-3xl text-backrooms-yellow">Chat Global</h1>
       </div>
-
+        --> 
       <!-- Chat Content -->
       <div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5 h-[calc(100vh-180px)]">
 

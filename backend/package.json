@@ -8,18 +8,24 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js"
   },
-  "keywords": ["backrooms", "multiplayer", "game", "api"],
+  "keywords": [
+    "backrooms",
+    "multiplayer",
+    "game",
+    "api"
+  ],
   "author": "Backrooms Team",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.19.2",
-    "mysql2": "^3.11.5",
-    "jsonwebtoken": "^9.0.2",
     "bcrypt": "^5.1.1",
-    "socket.io": "^4.7.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "joi": "^17.13.3"
+    "express": "^4.19.2",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.5",
+    "sanitize-html": "^2.17.2",
+    "socket.io": "^4.7.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

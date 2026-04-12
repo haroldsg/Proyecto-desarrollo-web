@@ -511,6 +511,23 @@ rp.current_scene_id  -- Faltaba en la consulta, causaba que el contador siempre 
 
 ---
 
+#### **FASE 6.4: Sanitización de Mensajes**
+
+**1. Sanitización en el Backend (fuente de verdad)**
+- ✅ Instalado `sanitize-html` para eliminar etiquetas HTML y scripts maliciosos
+- ✅ Todas las etiquetas HTML son removidas antes de guardar o emitir (`allowedTags: []`)
+- ✅ URLs bloqueadas (`http://`, `https://`, `ftp://`, `www.`) → reemplazadas por `[enlace eliminado]`
+- ✅ Mensajes truncados a 300 caracteres máximo
+- ✅ Sanitización aplicada en los tres canales: chat de sala, chat global y mensajes privados
+- ✅ Vue.js ya protege el frontend usando `{{ }}` (textContent), por lo que no se renderizan etiquetas
+
+**Archivos creados:**
+```
+backend/src/utils/sanitize.js   # Utilidad sanitizeMessage() reutilizable
+```
+
+---
+
 #### **Cambios de Base de Datos (FASE 6)**
 
 ```sql
@@ -574,31 +591,6 @@ DELETE /api/social/friends/:friendId         # Eliminar amigo
 'friend:error'            // Error en operación de amistad
 ```
 
-#### **Archivos Creados/Modificados**
-
-```
-backend/
-├── src/
-│   ├── models/
-│   │   └── Social.js              # Modelo: mensajes, amigos, solicitudes
-│   ├── controllers/
-│   │   └── socialController.js    # Controladores REST del sistema social
-│   ├── routes/
-│   │   └── socialRoutes.js        # Rutas /api/social/*
-│   └── socket/
-│       └── socketHandler.js       # Eventos global:*, private:*, friend:*
-├── database/
-│   └── schema.sql                 # Actualizado: tabla messages rediseñada + tabla friends
-
-frontend/
-├── src/
-│   ├── views/
-│   │   └── ChatGlobalView.vue     # Vista completa: chat global, amigos, privados, solicitudes
-│   └── services/
-│       └── api.js                 # socialAPI añadida
-```
-
----
 
 ## 📚 Documentación
 

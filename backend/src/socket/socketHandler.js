@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
 import Room from '../models/Room.js'
 import Social from '../models/Social.js'
+import { sanitizeMessage } from '../utils/sanitize.js'
 
 /**
  * Middleware de autenticación para Socket.io
@@ -118,7 +119,8 @@ const setupSocketHandlers = (io) => {
      */
     socket.on('chat:message', async ({ roomId, message }) => {
       try {
-        if (!message || message.trim() === '') return
+        const clean = sanitizeMessage(message)
+        if (!clean) return
 
         const isInRoom = await Room.isPlayerInRoom(roomId, socket.user.id)
         if (!isInRoom) {
@@ -129,7 +131,7 @@ const setupSocketHandlers = (io) => {
         io.to(`room:${roomId}`).emit('chat:message', {
           userId: socket.user.id,
           username: socket.user.username,
-          message: message.trim(),
+          message: clean,
           timestamp: new Date().toISOString()
         })
       } catch (error) {
@@ -185,14 +187,15 @@ const setupSocketHandlers = (io) => {
      * Chat global — guardar en DB y broadcast a todos
      */
     socket.on('global:message', async ({ message }) => {
-      if (!message || !message.trim()) return
+      const clean = sanitizeMessage(message)
+      if (!clean) return
       try {
-        const msgId = await Social.saveGlobalMessage(socket.user.id, message.trim())
+        const msgId = await Social.saveGlobalMessage(socket.user.id, clean)
         io.emit('global:message', {
           id: msgId,
           userId: socket.user.id,
           username: socket.user.username,
-          text: message.trim(),
+          text: clean,
           timestamp: new Date().toISOString()
         })
       } catch (error) {
@@ -204,14 +207,15 @@ const setupSocketHandlers = (io) => {
      * Mensaje privado — solo va al destinatario y al remitente
      */
     socket.on('private:message', async ({ receiverId, message }) => {
-      if (!message || !message.trim()) return
+      const clean = sanitizeMessage(message)
+      if (!clean) return
       try {
-        const msgId = await Social.savePrivateMessage(socket.user.id, receiverId, message.trim())
+        const msgId = await Social.savePrivateMessage(socket.user.id, receiverId, clean)
         const payload = {
           id: msgId,
           userId: socket.user.id,
           username: socket.user.username,
-          text: message.trim(),
+          text: clean,
           timestamp: new Date().toISOString(),
           fromUserId: socket.user.id,
           receiverId
