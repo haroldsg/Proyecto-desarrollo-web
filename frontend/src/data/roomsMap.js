@@ -13,7 +13,7 @@ export const roomsMap = {
     description: 'Un infinito pasillo de paredes amarillas y luces fluorescentes parpadeantes. El zumbido constante te perfora los oídos.',
     connections: {
       forward: 'pasillo-2',
-      right: 'pasillo-18',
+      right: 'pasillo-18-inf',
       left: 'pasillo-27',
       backward: null
     },
@@ -432,7 +432,7 @@ export const roomsMap = {
     image: '/images/rooms/bloqDerSup/trampilla-salida-2.jpg',
     description: 'Tal parece que no puedes volver... pero si continuar hacia adelante, quizás encuentres algo nuevo.',
     connections: {
-      forward: null,
+      forward: 'pasillo-20',
       right: null,
       left: null,
       backward: null
@@ -444,8 +444,8 @@ export const roomsMap = {
   //BLOQUE DERECHO INFERIOR
   // ========================================
 
-  'pasillo-18': {
-    id: 'pasillo-18',
+  'pasillo-18-inf': {
+    id: 'pasillo-18-inf',
     name: 'Pasillo',
     image: '/images/rooms/bloqDerInf/1.jpg',
     description: 'Un infinito pasillo de paredes amarillas y luces fluorescentes parpadeantes. El zumbido constante te perfora los oídos.',
@@ -467,7 +467,7 @@ export const roomsMap = {
       forward: 'pasillo-20',
       right: null,
       left: null,
-      backward: 'pasillo-18'
+      backward: 'pasillo-18-inf'
     },
     items: []
   },
@@ -520,7 +520,7 @@ export const roomsMap = {
     image: '/images/rooms/bloqDerInf/pomni.jpg',
     description: '',
     connections: {
-      forward: 'pasillo-23',
+      forward: null,
       right: null,
       left: null,
       backward: 'pasillo-20'
@@ -576,7 +576,7 @@ export const roomsMap = {
       forward: 'pasillo-25',
       right: null,
       left: null,
-      backward: 'pasillo-18'
+      backward: 'pasillo-18-inf'
     },
     items: []
   },

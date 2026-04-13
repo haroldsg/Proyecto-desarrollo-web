@@ -34,7 +34,12 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: true }
       }
     } catch (err) {
-      error.value = err.message || 'Error al registrarse'
+      // Si el backend devuelve un array de errores de validación, mostrar el primero
+      if (err.errors && err.errors.length > 0) {
+        error.value = err.errors[0].message
+      } else {
+        error.value = err.message || 'Error al registrarse'
+      }
       return { success: false, error: error.value }
     } finally {
       loading.value = false

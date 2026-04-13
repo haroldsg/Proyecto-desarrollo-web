@@ -68,10 +68,11 @@
               type="password"
               placeholder="••••••••"
               required
-              minlength="6"
+              minlength="8"
               autocomplete="new-password"
               class="w-full px-4 py-3 bg-black/40 border border-backrooms-yellow/20 rounded-md text-white text-base transition-all duration-300 focus:outline-none focus:border-backrooms-yellow focus:shadow-[0_0_15px_rgba(255,220,100,0.2)]"
             />
+            <p class="text-gray-500 text-xs mt-1">Mínimo 8 caracteres</p>
           </div>
 
           <!-- Confirm Password Input -->
@@ -85,7 +86,7 @@
               type="password"
               placeholder="••••••••"
               required
-              minlength="6"
+              minlength="8"
               autocomplete="new-password"
               class="w-full px-4 py-3 bg-black/40 border border-backrooms-yellow/20 rounded-md text-white text-base transition-all duration-300 focus:outline-none focus:border-backrooms-yellow focus:shadow-[0_0_15px_rgba(255,220,100,0.2)]"
             />
@@ -143,8 +144,8 @@ async function handleRegister() {
     return
   }
 
-  if (formData.value.password.length < 6) {
-    error.value = 'La contraseña debe tener al menos 6 caracteres'
+  if (formData.value.password.length < 8) {
+    error.value = 'La contraseña debe tener al menos 8 caracteres'
     return
   }
 

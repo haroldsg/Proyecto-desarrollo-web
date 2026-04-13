@@ -28,9 +28,10 @@
       </div>
 
       <div class="max-w-md mx-auto space-y-5 mb-[60px]">
-        <!-- Continuar Partida (si hay partida activa) -->
+
+        <!-- Continuar Partida (solo si status = 'playing') -->
         <div
-          v-if="activeRoom"
+          v-if="activeRoom && activeRoom.status === 'playing'"
           @click="handleContinue"
           class="bg-gradient-to-br from-backrooms-yellow/20 to-backrooms-yellow/10 border-2 border-backrooms-yellow rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:from-backrooms-yellow/30 hover:to-backrooms-yellow/20 hover:shadow-[0_8px_30px_rgba(255,220,100,0.3)] hover:-translate-y-1"
         >
@@ -39,6 +40,20 @@
           </h2>
           <p class="text-backrooms-yellow/70 text-sm text-center mt-2">
             {{ activeRoom.room_name }}
+          </p>
+        </div>
+
+        <!-- Volver a la Sala (solo si status = 'waiting') -->
+        <div
+          v-if="activeRoom && activeRoom.status === 'waiting'"
+          @click="handleReturnToRoom"
+          class="bg-gradient-to-br from-blue-500/20 to-blue-600/10 border-2 border-blue-400/60 rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:from-blue-500/30 hover:to-blue-600/20 hover:shadow-[0_8px_30px_rgba(100,150,255,0.3)] hover:-translate-y-1"
+        >
+          <h2 class="text-blue-300 text-3xl text-center font-['Courier_New',monospace] tracking-wide">
+            Volver a la Sala
+          </h2>
+          <p class="text-blue-300/60 text-sm text-center mt-2">
+            {{ activeRoom.room_name }} · Esperando jugadores...
           </p>
         </div>
 
@@ -52,24 +67,25 @@
           </h2>
         </div>
 
-        <!-- Crear Sala -->
+        <!-- Crear Sala (solo si no hay sala en espera) -->
         <div
+          v-if="!activeRoom || activeRoom.status === 'playing'"
           @click="handleMultiplayerCreate"
-          class="bg-backrooms-dark-light/80  rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-backrooms-dark-light hover:border-backrooms-yellow/60 hover:shadow-[0_8px_30px_rgba(255,220,100,0.2)] hover:-translate-y-1"
+          class="bg-backrooms-dark-light/80 rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-backrooms-dark-light hover:border-backrooms-yellow/60 hover:shadow-[0_8px_30px_rgba(255,220,100,0.2)] hover:-translate-y-1"
         >
           <h2 class="text-backrooms-yellow text-3xl text-center font-['Courier_New',monospace] tracking-wide">
             Crear Sala
           </h2>
         </div>
 
-        <!-- Salir de la Sala/Partida (si hay partida activa) -->
+        <!-- Salir de la Sala/Partida (si hay sala o partida activa) -->
         <div
           v-if="activeRoom"
           @click="handleLeaveGame"
           class="bg-red-600/20 rounded-lg p-6 cursor-pointer transition-all duration-300 ease-in-out hover:bg-red-600/30 hover:border-red-500/70 hover:shadow-[0_8px_30px_rgba(255,70,70,0.3)] hover:-translate-y-1"
         >
           <h2 class="text-red-400 text-3xl text-center font-['Courier_New',monospace] tracking-wide">
-            Salir de la Partida
+            {{ activeRoom.status === 'waiting' ? 'Salir de la Sala' : 'Salir de la Partida' }}
           </h2>
         </div>
       </div>
@@ -85,7 +101,12 @@
             ⚠️ ADVERTENCIA
           </h3>
           <p class="text-white/90 text-center mb-6">
-            Ya tienes una partida activa. Si continúas, <span class="text-red-400 font-bold">perderás todo el progreso</span> de tu partida anterior.
+            <template v-if="activeRoom?.status === 'waiting'">
+              Ya tienes una sala activa. Si continúas, <span class="text-red-400 font-bold">saldrás de esa sala</span> y los demás jugadores serán notificados.
+            </template>
+            <template v-else>
+              Ya tienes una partida activa. Si continúas, <span class="text-red-400 font-bold">perderás todo el progreso</span> de tu partida anterior.
+            </template>
           </p>
           <p class="text-backrooms-yellow/70 text-sm text-center mb-6">
             Partida actual: {{ activeRoom?.room_name }}
@@ -115,10 +136,15 @@
       >
         <div class="bg-backrooms-dark border-2 border-red-500/50 rounded-lg p-8 max-w-md w-full">
           <h3 class="text-red-400 text-2xl font-['Courier_New',monospace] mb-4 text-center">
-            ⚠️ SALIR DE LA PARTIDA
+            ⚠️ {{ activeRoom?.status === 'waiting' ? 'SALIR DE LA SALA' : 'SALIR DE LA PARTIDA' }}
           </h3>
           <p class="text-white/90 text-center mb-6">
-            ¿Estás seguro de que quieres salir? <span class="text-red-400 font-bold">Perderás todo el progreso</span> de esta partida.
+            <template v-if="activeRoom?.status === 'waiting'">
+              ¿Estás seguro de que quieres salir? Los demás jugadores serán notificados.
+            </template>
+            <template v-else>
+              ¿Estás seguro de que quieres salir? <span class="text-red-400 font-bold">Perderás todo el progreso</span> de esta partida.
+            </template>
           </p>
           <p class="text-backrooms-yellow/70 text-sm text-center mb-6">
             {{ activeRoom?.room_name }}
@@ -198,11 +224,19 @@ async function checkActiveRoom() {
   }
 }
 
-// Continuar partida existente
+// Continuar partida existente (status = 'playing')
 function handleContinue() {
   if (activeRoom.value) {
     localStorage.setItem('currentRoomId', activeRoom.value.id)
     router.push('/game')
+  }
+}
+
+// Volver a la sala de espera (status = 'waiting')
+function handleReturnToRoom() {
+  if (activeRoom.value) {
+    localStorage.setItem('currentRoomId', activeRoom.value.id)
+    router.push(`/room/${activeRoom.value.id}`)
   }
 }
 

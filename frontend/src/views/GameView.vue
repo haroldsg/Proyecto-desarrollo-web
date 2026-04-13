@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-backrooms-dark flex flex-col overflow-hidden">
+  <div class="h-screen bg-backrooms-dark flex flex-col overflow-hidden">
     <!-- Header -->
     <div class="flex justify-between items-center px-6 py-3 bg-backrooms-dark-light/95 border-b-2 border-backrooms-yellow/30">
       <div class="flex items-center gap-4">
@@ -22,7 +22,7 @@
       <!-- Left: Chat (solo en multijugador) -->
       <div
         v-if="isMultiplayer"
-        class="bg-backrooms-dark-light border-r-2 border-backrooms-yellow/20 flex flex-col overflow-hidden"
+        class="bg-backrooms-dark-light border-r-2 border-backrooms-yellow/20 flex flex-col overflow-hidden min-h-0"
       >
         <!-- Header del Chat -->
         <div class="px-4 py-3 border-b-2 border-backrooms-yellow/20 bg-black/30">
@@ -94,7 +94,7 @@
       </div>
 
       <!-- Center: Game Scene -->
-      <div class="relative bg-gradient-to-br from-[#1a1510] via-[#0a0a0a] to-[#1a1a1a] flex flex-col">
+      <div class="relative bg-gradient-to-br from-[#1a1510] via-[#0a0a0a] to-[#1a1a1a] flex flex-col min-h-0 overflow-hidden">
         <!-- Scene Image/Visual -->
         <div class="flex-1 relative overflow-hidden flex items-center justify-center p-4">
           <div class="w-full h-full max-h-[70vh] relative">
@@ -193,7 +193,7 @@
       </div>
 
       <!-- Right: Stats & Inventory Panel -->
-      <div class="bg-backrooms-dark-light border-l-2 border-backrooms-yellow/20 flex flex-col overflow-hidden">
+      <div class="bg-backrooms-dark-light border-l-2 border-backrooms-yellow/20 flex flex-col overflow-hidden min-h-0">
         <!-- Inventory -->
         <div class="flex-1 overflow-y-auto p-5">
           <h3 class="text-backrooms-yellow text-lg font-semibold mb-4">Inventario</h3>
@@ -589,12 +589,13 @@ const availableActions = computed(() => {
 // Inventory
 const maxSlots = 8
 const inventory = ref([])
+const isLoadingProgress = ref(false) // evita que el watch guarde mientras se carga
 
 const quickSlots = ref([
   {
     icon: '📋',
     name: 'Tutorial',
-    description: 'Con los botones inferiores puedes moverte entre los pasillos.\n\nEl botón "Examinar" te permite ver la descripción de las escenas e incluso agarrar objetos que veas (tranquilo, se ven a simple vista).'
+    description: 'Con los botones inferiores puedes moverte entre los pasillos.\n\nEl botón "Examinar" te permite ver la descripción de las escenas e incluso agarrar objetos que veas (tranquilo, se ven a simple vista).\n\nLos objetos que recolectes se guardarán en tu inventario, al hacer click en ellos podrás ver su descripción y debajo del inventario hay objetos claves que te ayudaran a guiarte y entender la interfaz e historia.'
   },
   {
     icon: '📜',
@@ -667,7 +668,7 @@ function examineRoom() {
 
   // Buscar items que aún no hemos recogido
   const newItems = room.items?.filter(item => {
-    return !inventory.value.find(i => i.id === item.id)
+    return !inventory.value.find(i => i.id === item.id || i.name === item.name)
   }) || []
 
   if (newItems.length > 0) {
@@ -1075,6 +1076,10 @@ onMounted(async () => {
   if (currentSessionId.value) {
     await loadGameProgress()
   }
+
+  // Mostrar tutorial automáticamente al iniciar
+  selectedKeyItem.value = quickSlots.value[0]
+  showKeyItemModal.value = true
 })
 
 // Auto-guardar cuando cambia el escenario
@@ -1102,9 +1107,9 @@ watch(currentRoomId, async (newSceneId) => {
   }
 })
 
-// Auto-guardar cuando cambia el inventario
+// Auto-guardar cuando cambia el inventario (ignorar cambios durante la carga inicial)
 watch(inventory, async () => {
-  if (currentSessionId.value) {
+  if (currentSessionId.value && !isLoadingProgress.value) {
     await saveGameProgress()
   }
 }, { deep: true })
@@ -1142,9 +1147,20 @@ async function loadGameProgress() {
 
       // Cargar inventario guardado
       if (response.data.inventory && response.data.inventory.length > 0) {
-        // Mapear los items guardados a la estructura del inventario
-        inventory.value = response.data.inventory.map(item => {
-          // Buscar el item completo en roomsMap para obtener todos sus datos
+        isLoadingProgress.value = true
+
+        // Deduplicar por nombre antes de mapear (evita duplicados por refresco)
+        const uniqueItems = []
+        const seen = new Set()
+        for (const item of response.data.inventory) {
+          if (!seen.has(item.name)) {
+            seen.add(item.name)
+            uniqueItems.push(item)
+          }
+        }
+
+        // Mapear los items guardados a la estructura completa del juego
+        inventory.value = uniqueItems.map(item => {
           for (const roomId in roomsMap) {
             const room = roomsMap[roomId]
             if (room.items) {
@@ -1154,14 +1170,15 @@ async function loadGameProgress() {
               }
             }
           }
-          // Si no se encuentra, crear un item básico
           return {
             name: item.name,
             quantity: item.quantity,
             icon: '📦',
-            description: 'Item guardado'
+            description: 'ESTE ITEM SE PERDIÓ ALGO SALIÓ MAL AL CARGARLO, LO SIENTO :('
           }
         })
+
+        isLoadingProgress.value = false
       }
 
       console.log('Progreso cargado:', response.data)
